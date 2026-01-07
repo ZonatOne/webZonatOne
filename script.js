@@ -822,6 +822,7 @@ function createSampleCampaigns() {
             endDate: '2026-03-31',
             logo: null,
             banner: null,
+            isStar: true,  // ⭐ Star campaign untuk carousel
             createdAt: new Date().toISOString()
         },
         {
@@ -834,6 +835,46 @@ function createSampleCampaigns() {
             endDate: '2026-04-30',
             logo: null,
             banner: null,
+            isStar: true,  // ⭐ Star campaign untuk carousel
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 3,
+            name: 'LayerZero Airdrop',
+            description: 'LayerZero adalah protokol interoperabilitas omnichain yang memungkinkan pesan lintas berbagai blockchain dengan aman.',
+            website: 'https://layerzero.network',
+            budget: '$500 - $2,000',
+            startDate: '2026-01-15',
+            endDate: '2026-03-15',
+            logo: null,
+            banner: null,
+            isStar: true,  // ⭐ Star campaign untuk carousel
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 4,
+            name: 'zkSync Era Airdrop',
+            description: 'zkSync adalah solusi scaling Layer 2 untuk Ethereum menggunakan teknologi zero-knowledge rollups.',
+            website: 'https://zksync.io',
+            budget: '$1,000 - $5,000',
+            startDate: '2026-01-10',
+            endDate: 'Ongoing',
+            logo: null,
+            banner: null,
+            isStar: false,  // Regular campaign
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 5,
+            name: 'Starknet Airdrop',
+            description: 'Starknet adalah Layer 2 scaling solution menggunakan STARK proofs. Airdrop untuk early adopters dan contributors.',
+            website: 'https://starknet.io',
+            budget: '$800 - $3,000',
+            startDate: '2026-01-20',
+            endDate: '2026-06-30',
+            logo: null,
+            banner: null,
+            isStar: false,  // Regular campaign
             createdAt: new Date().toISOString()
         }
     ];
