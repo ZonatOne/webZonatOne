@@ -337,12 +337,12 @@ function renderAirdrops() {
                 </p>
             </div>
         `;
-        totalAirdropsEl.textContent = airdrops.length;
+        if (totalAirdropsEl) totalAirdropsEl.textContent = airdrops.length;
         return;
     }
 
     airdropsGrid.innerHTML = filteredAirdrops.map(airdrop => createAirdropCard(airdrop)).join('');
-    totalAirdropsEl.textContent = airdrops.length;
+    if (totalAirdropsEl) totalAirdropsEl.textContent = airdrops.length;
 }
 
 function createAirdropCard(airdrop) {
