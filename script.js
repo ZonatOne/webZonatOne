@@ -804,6 +804,20 @@ function loadCampaigns() {
     const saved = localStorage.getItem('campaigns');
     if (saved) {
         campaigns = JSON.parse(saved);
+
+        // Migration: Add isStar property to old campaigns if missing
+        let needsMigration = false;
+        campaigns.forEach(campaign => {
+            if (campaign.isStar === undefined) {
+                campaign.isStar = false; // Default to false for old campaigns
+                needsMigration = true;
+            }
+        });
+
+        // Save migrated data
+        if (needsMigration) {
+            saveCampaigns();
+        }
     }
 }
 
@@ -896,17 +910,22 @@ const carouselContainer = document.getElementById('campaignCarousel');
 function renderCampaignCarousel() {
     if (!carouselTrack) return;
 
-    if (campaigns.length === 0) {
-        carouselTrack.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 2rem;">Belum ada kampanye</p>`;
+    // Filter untuk only star campaigns
+    const starCampaigns = campaigns.filter(c => c.isStar === true);
+
+    if (starCampaigns.length === 0) {
+        carouselTrack.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 2rem;">Belum ada kampanye star</p>`;
+        // Hide indicators dan arrows jika kosong
+        if (carouselIndicators) carouselIndicators.innerHTML = '';
         return;
     }
 
-    // Render all campaign cards
-    carouselTrack.innerHTML = campaigns.map(campaign => createCampaignCardForCarousel(campaign)).join('');
+    // Render star campaign cards only
+    carouselTrack.innerHTML = starCampaigns.map(campaign => createCampaignCardForCarousel(campaign)).join('');
 
-    // Setup indicators
+    // Setup indicators based on star campaigns
     if (carouselIndicators) {
-        const numSlides = campaigns.length; // Each campaign is a slide
+        const numSlides = starCampaigns.length; // Each star campaign is a slide
         carouselIndicators.innerHTML = Array.from({ length: numSlides }, (_, i) =>
             `<button class="carousel-indicator ${i === 0 ? 'active' : ''}" data-slide="${i}"></button>`
         ).join('');
