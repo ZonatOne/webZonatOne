@@ -312,6 +312,22 @@ async function openAdminPanel() {
         return;
     }
 
+    // Reset Form State
+    editingId = null;
+    if (airdropForm) airdropForm.reset();
+
+    // Reset UI Text
+    const titleEl = document.querySelector('#adminPanel .panel-header h3');
+    const btnEl = document.querySelector('#adminPanel .btn-primary');
+    if (titleEl) titleEl.textContent = 'Tambah Airdrop Baru';
+    if (btnEl) btnEl.textContent = 'Publikasikan Airdrop';
+
+    // Reset Image Uploader
+    currentImageData = null;
+    if (previewImg) previewImg.src = '';
+    if (uploadPlaceholder) uploadPlaceholder.style.display = 'flex';
+    if (imagePreview) imagePreview.style.display = 'none';
+
     adminPanel.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
