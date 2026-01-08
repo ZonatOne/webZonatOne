@@ -1125,16 +1125,42 @@ body {
 }
 
 .airdrop-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    /* Reset standard styles */
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 1.5rem;
     transition: all 0.3s ease;
     cursor: pointer;
     animation: fadeIn 0.5s ease;
     position: relative;
-    overflow: hidden;
+    z-index: 1;
+    overflow: visible;
+}
+
+.airdrop-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    background: rgba(45, 96, 255, 0.3);
+    /* Dimmer blue initially */
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+    z-index: -1;
+    transition: all 0.3s ease;
+}
+
+.airdrop-card::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: rgba(30, 36, 66, 0.8);
+    backdrop-filter: blur(5px);
+    clip-path: polygon(13px 0, 100% 0, 100% calc(100% - 13px), calc(100% - 13px) 100%, 0 100%, 0 13px);
+    z-index: -2;
 }
 
 @keyframes fadeIn {
@@ -1150,9 +1176,13 @@ body {
 }
 
 .airdrop-card:hover {
-    transform: translateY(-8px);
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-glow);
+    transform: translateY(-5px);
+}
+
+.airdrop-card:hover::before {
+    background: #2D60FF;
+    /* Solid Bright Blue */
+    box-shadow: 0 0 20px rgba(45, 96, 255, 0.4);
 }
 
 /* Network Badge */
