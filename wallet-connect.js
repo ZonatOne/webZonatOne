@@ -107,6 +107,9 @@ function refreshAdminUI() {
     if (typeof renderCampaignCarousel === 'function') {
         renderCampaignCarousel();
     }
+    if (typeof renderHeroCarousel === 'function') {
+        renderHeroCarousel();
+    }
 }
 
 // ===== Check Campaign Access =====

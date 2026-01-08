@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAirdrops();
     renderCampaigns();
     renderCampaignCarousel();
+    renderHeroCarousel();
     updateStats();
     setupEventListeners();
     startAutoSlide();
@@ -1462,10 +1463,159 @@ function startAutoSlide() {
 
     autoSlideInterval = setInterval(() => {
         navigateCarousel(1);
+        navigateHeroCarousel(1);
     }, 5000);
 }
 
 // Recalculate carousel position on window resize
 window.addEventListener('resize', () => {
     updateCarouselPosition();
+    updateHeroCarouselPosition();
 });
+
+// ===== Hero Carousel Functions =====
+let heroCurrentSlide = 0;
+
+function renderHeroCarousel() {
+    const heroTrack = document.getElementById('heroCarouselTrack');
+    const heroDots = document.getElementById('heroCarouselDots');
+    const heroPrev = document.getElementById('heroPrev');
+    const heroNext = document.getElementById('heroNext');
+
+    if (!heroTrack || !heroDots) return;
+
+    const starCampaigns = campaigns.filter(c => c.isStar);
+
+    if (starCampaigns.length === 0) {
+        heroTrack.innerHTML = `
+            <div class="hero-campaign-card">
+                <div class="campaign-banner-placeholder">✨</div>
+                <div class="campaign-info-row">
+                    <div class="campaign-logo-placeholder">?</div>
+                    <h4 class="campaign-name">Star Kampanye Pilihan</h4>
+                </div>
+                <p class="campaign-desc">Belum ada kampanye premium. Jadilah yang pertama!</p>
+                <div class="campaign-cta">
+                    <button class="btn-cta primary" onclick="document.getElementById('openCampaignBtn').click()">Buat Kampanye</button>
+                </div>
+            </div>
+        `;
+        heroDots.innerHTML = '';
+        return;
+    }
+
+    heroTrack.innerHTML = starCampaigns.map(campaign => createHeroCampaignCard(campaign)).join('');
+
+    heroDots.innerHTML = starCampaigns.map((_, index) => `
+        <div class="hero-carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+    `).join('');
+
+    // Add click handlers for dots
+    heroDots.querySelectorAll('.hero-carousel-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            heroCurrentSlide = parseInt(dot.dataset.index);
+            updateHeroCarouselPosition();
+        });
+    });
+
+    // Add click handlers for nav buttons
+    if (heroPrev) {
+        heroPrev.addEventListener('click', () => navigateHeroCarousel(-1));
+    }
+    if (heroNext) {
+        heroNext.addEventListener('click', () => navigateHeroCarousel(1));
+    }
+
+    heroCurrentSlide = 0;
+    updateHeroCarouselPosition();
+}
+
+function createHeroCampaignCard(campaign) {
+    return `
+        <div class="hero-campaign-card">
+            ${campaign.banner
+            ? `<img src="${campaign.banner}" alt="${campaign.name}" class="campaign-banner">`
+            : `<div class="campaign-banner-placeholder">✨</div>`
+        }
+            <div class="campaign-info-row">
+                ${campaign.logo
+            ? `<img src="${campaign.logo}" alt="${campaign.name}" class="campaign-logo">`
+            : `<div class="campaign-logo-placeholder">${campaign.name.charAt(0)}</div>`
+        }
+                <h4 class="campaign-name">${campaign.name}</h4>
+            </div>
+            <p class="campaign-desc">${campaign.description}</p>
+            <div class="campaign-cta">
+                <button class="btn-cta primary" onclick="visitCampaign(${campaign.id})">Kunjungi</button>
+                <button class="btn-cta secondary" onclick="viewCampaignDetails(${campaign.id})">Detail</button>
+            </div>
+        </div>
+    `;
+}
+
+function navigateHeroCarousel(direction) {
+    const starCampaigns = campaigns.filter(c => c.isStar);
+    if (starCampaigns.length === 0) return;
+
+    heroCurrentSlide += direction;
+
+    if (heroCurrentSlide < 0) {
+        heroCurrentSlide = starCampaigns.length - 1;
+    } else if (heroCurrentSlide >= starCampaigns.length) {
+        heroCurrentSlide = 0;
+    }
+
+    updateHeroCarouselPosition();
+}
+
+function updateHeroCarouselPosition() {
+    const heroTrack = document.getElementById('heroCarouselTrack');
+    const heroDots = document.getElementById('heroCarouselDots');
+    const heroContainer = document.querySelector('.hero-carousel-container');
+
+    if (!heroTrack || !heroContainer) return;
+
+    const containerWidth = heroContainer.offsetWidth;
+    heroTrack.style.transform = `translateX(-${heroCurrentSlide * containerWidth}px)`;
+
+    if (heroDots) {
+        heroDots.querySelectorAll('.hero-carousel-dot').forEach((dot, index) => {
+            dot.classList.toggle('active', index === heroCurrentSlide);
+        });
+    }
+}
+
+function viewCampaignDetails(id) {
+    const campaign = campaigns.find(c => c.id === id);
+    if (!campaign) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.innerHTML = `
+        <div class="admin-panel" style="max-width: 600px;">
+            <div class="panel-header">
+                <h3>${campaign.name}</h3>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div style="padding: 1.5rem;">
+                ${campaign.banner ? `<img src="${campaign.banner}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem;">` : ''}
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">${campaign.description}</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Budget</div>
+                        <div style="font-weight: 600;">${campaign.budget || 'TBA'}</div>
+                    </div>
+                    <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Periode</div>
+                        <div style="font-weight: 600;">${campaign.startDate || 'TBA'} - ${campaign.endDate || 'TBA'}</div>
+                    </div>
+                </div>
+                ${campaign.website ? `<a href="${campaign.website}" target="_blank" class="btn-action primary" style="display: block; text-align: center; margin-top: 1rem;">Kunjungi Website</a>` : ''}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
