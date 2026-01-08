@@ -639,18 +639,21 @@ body {
     position: relative;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
 }
 
 /* Hero Campaign Carousel */
 .hero-campaign-carousel {
     width: 100%;
-    max-width: 500px;
+    max-width: 550px;
+    min-height: 380px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
 }
 
 .hero-carousel-header {
