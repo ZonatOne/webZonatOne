@@ -1118,9 +1118,11 @@ body {
 }
 
 /* ===== Airdrop Grid ===== */
+/* ===== Airdrop Grid ===== */
 .airdrops-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    /* Changed to 3 columns for wider cards */
     gap: var(--spacing-lg);
 }
 
@@ -1129,38 +1131,53 @@ body {
     background: transparent;
     border: none;
     border-radius: 0;
-    padding: 1.5rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    animation: fadeIn 0.5s ease;
+    padding: 2px;
+    /* Container acts as the border */
     position: relative;
     z-index: 1;
-    overflow: visible;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    animation: fadeIn 0.5s ease;
+
+    /* Using background as the border color + clip-path */
+    background: rgba(45, 96, 255, 0.4);
+    /* Default Thin Border Color */
+    clip-path: polygon(15px 0, 100% 0,
+            100% calc(100% - 15px), calc(100% - 15px) 100%,
+            0 100%, 0 15px);
 }
 
-.airdrop-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    padding: 2px;
-    background: rgba(45, 96, 255, 0.3);
-    /* Dimmer blue initially */
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
-    z-index: -1;
-    transition: all 0.3s ease;
+/* Inner Content Container */
+.airdrop-card-inner {
+    background: rgba(10, 14, 39, 0.9);
+    /* Dark Bg */
+    height: 100%;
+    width: 100%;
+    padding: 1.5rem;
+    clip-path: polygon(14px 0, 100% 0,
+            100% calc(100% - 14px), calc(100% - 14px) 100%,
+            0 100%, 0 14px);
+    transition: background 0.3s ease;
 }
 
-.airdrop-card::after {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    background: rgba(30, 36, 66, 0.8);
-    backdrop-filter: blur(5px);
-    clip-path: polygon(13px 0, 100% 0, 100% calc(100% - 13px), calc(100% - 13px) 100%, 0 100%, 0 13px);
-    z-index: -2;
+/* Hover State - Glows the outer "border" container */
+.airdrop-card:hover {
+    transform: translateY(-5px);
+    background: #2D60FF;
+    /* Solid Blue Border on Hover */
+    box-shadow: 0 0 20px rgba(45, 96, 255, 0.4);
+    /* Glow Effect */
+}
+
+/* Clean Border Utility for Card Inner */
+.airdrop-card-inner {
+    background: rgba(10, 14, 39, 0.9);
+    height: 100%;
+    width: 100%;
+    padding: 1.5rem;
+    clip-path: polygon(13.5px 0, 100% 0,
+            100% calc(100% - 13.5px), calc(100% - 13.5px) 100%,
+            0 100%, 0 13.5px);
 }
 
 @keyframes fadeIn {
@@ -1175,9 +1192,6 @@ body {
     }
 }
 
-.airdrop-card:hover {
-    transform: translateY(-5px);
-}
 
 .airdrop-card:hover::before {
     background: #2D60FF;

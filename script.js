@@ -570,37 +570,39 @@ function createAirdropCard(airdrop) {
 
     return `
         <div class="airdrop-card" data-id="${airdrop.id}">
-            <span class="network-badge ${networkClass}">${airdrop.network || 'Multichain'}</span>
-            <div class="card-header">
-                ${logoHtml}
-                <div class="card-title-section">
-                    <h4 class="card-title">${airdrop.title}</h4>
-                    <span class="card-category">${airdrop.category}</span>
-                    <span class="difficulty-badge ${difficultyClass}">${airdrop.difficulty || 'Medium'}</span>
+            <div class="airdrop-card-inner">
+                <span class="network-badge ${networkClass}">${airdrop.network || 'Multichain'}</span>
+                <div class="card-header">
+                    ${logoHtml}
+                    <div class="card-title-section">
+                        <h4 class="card-title">${airdrop.title}</h4>
+                        <span class="card-category">${airdrop.category}</span>
+                        <span class="difficulty-badge ${difficultyClass}">${airdrop.difficulty || 'Medium'}</span>
+                    </div>
                 </div>
-            </div>
-            <p class="card-description">${airdrop.description}</p>
-            ${countdownHtml}
-            <div class="card-info">
-                <div class="info-item">
-                    <span class="info-label">Reward</span>
-                    <span class="info-value">${airdrop.reward}</span>
+                <p class="card-description">${airdrop.description}</p>
+                ${countdownHtml}
+                <div class="card-info">
+                    <div class="info-item">
+                        <span class="info-label">Reward</span>
+                        <span class="info-value">${airdrop.reward}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Deadline</span>
+                        <span class="info-value">${deadlineFormatted}</span>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Deadline</span>
-                    <span class="info-value">${deadlineFormatted}</span>
+                <div class="card-actions">
+                    <button class="btn-action" onclick="viewDetails(${airdrop.id})">Detail</button>
+                    <button class="btn-action primary" onclick="joinAirdrop(${airdrop.id})">Ikuti Airdrop</button>
                 </div>
+                ${(typeof isAdmin !== 'undefined' && isAdmin) ? `
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;" class="admin-actions">
+                    <button class="btn-action" onclick="editAirdrop(${airdrop.id})" style="flex: 1; font-size: 0.85rem; padding: 0.5rem;">✏️ Edit</button>
+                    <button class="btn-action" onclick="deleteAirdrop(${airdrop.id})" style="flex: 1; font-size: 0.85rem; padding: 0.5rem; border-color: #ff6b9d; color: #ff6b9d;">🗑️ Hapus</button>
+                </div>
+                ` : ''}
             </div>
-            <div class="card-actions">
-                <button class="btn-action" onclick="viewDetails(${airdrop.id})">Detail</button>
-                <button class="btn-action primary" onclick="joinAirdrop(${airdrop.id})">Ikuti Airdrop</button>
-            </div>
-            ${(typeof isAdmin !== 'undefined' && isAdmin) ? `
-            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;" class="admin-actions">
-                <button class="btn-action" onclick="editAirdrop(${airdrop.id})" style="flex: 1; font-size: 0.85rem; padding: 0.5rem;">✏️ Edit</button>
-                <button class="btn-action" onclick="deleteAirdrop(${airdrop.id})" style="flex: 1; font-size: 0.85rem; padding: 0.5rem; border-color: #ff6b9d; color: #ff6b9d;">🗑️ Hapus</button>
-            </div>
-            ` : ''}
         </div>
     `;
 }
