@@ -503,7 +503,8 @@ body {
 
 .hero-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 0.8fr 1.2fr;
+    /* More space for Carousel */
     gap: 4rem;
     align-items: center;
 }
@@ -728,59 +729,38 @@ body {
 
 /* Hero Campaign Carousel */
 /* Hero Campaign Carousel */
+/* Hero Campaign Carousel - Clean Sci-Fi Style */
 .hero-campaign-carousel {
     width: 100%;
-    max-width: 620px;
-    min-height: 420px;
-    /* Remove standard border/bg */
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 1.5rem 2rem;
-    /* Use drop-shadow for the glow effect on the shape */
-    filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.3));
-    display: flex;
-    flex-direction: column;
+    max-width: 800px;
+    /* Widened for impact */
+    min-height: 460px;
+    background: rgba(45, 96, 255, 0.4);
+    /* Border Color */
+    padding: 2px;
+    /* acts as border width */
     position: relative;
     z-index: 1;
-}
 
-/* The Neon Border */
-.hero-campaign-carousel::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    padding: 2px;
-    /* Border thickness */
-    background: #2D60FF;
-    /* Solid Sci-Fi Blue */
-    -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-
-    /* Top-Left and Bottom-Right Chamfer */
+    /* Chamfered Shape */
     clip-path: polygon(24px 0, 100% 0,
             100% calc(100% - 24px), calc(100% - 24px) 100%,
             0 100%, 0 24px);
-    z-index: -1;
-    pointer-events: none;
 }
 
-/* The Background */
-.hero-campaign-carousel::after {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    /* Inside the border */
-    background: var(--bg-card);
-    /* Match the clip path */
-    clip-path: polygon(22px 0, 100% 0,
-            100% calc(100% - 22px), calc(100% - 22px) 100%,
-            0 100%, 0 22px);
-    z-index: -2;
-    pointer-events: none;
+.hero-campaign-inner {
+    background: rgba(10, 14, 39, 0.9);
+    /* Inner Dark BG */
+    width: 100%;
+    height: 100%;
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+
+    /* Inner Chamfer matching Outer */
+    clip-path: polygon(22.5px 0, 100% 0,
+            100% calc(100% - 22.5px), calc(100% - 22.5px) 100%,
+            0 100%, 0 22.5px);
 }
 
 .hero-carousel-header {
@@ -1193,11 +1173,7 @@ body {
 }
 
 
-.airdrop-card:hover::before {
-    background: #2D60FF;
-    /* Solid Bright Blue */
-    box-shadow: 0 0 20px rgba(45, 96, 255, 0.4);
-}
+/* Removed leftover rule */
 
 /* Network Badge */
 .network-badge {
