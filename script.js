@@ -6,7 +6,9 @@ let currentLogoData = null;
 let currentBannerData = null;
 let currentPage = 'home';
 let currentFilter = 'all';
+let searchQuery = '';
 let editingId = null;
+let editingCampaignId = null;
 let currentSlide = 0;
 let autoSlideInterval = null;
 
@@ -17,7 +19,9 @@ const closeAdminBtn = document.getElementById('closeAdminBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const airdropForm = document.getElementById('airdropForm');
 const airdropsGrid = document.getElementById('airdropsGrid');
-const totalAirdropsEl = document.getElementById('totalAirdrops');
+const searchInput = document.getElementById('searchInput');
+const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+const navMenu = document.getElementById('navMenu');
 
 // Upload elements
 const uploadArea = document.getElementById('uploadArea');
@@ -53,16 +57,23 @@ const bannerPreviewImg = document.getElementById('bannerPreviewImg');
 const removeBannerBtn = document.getElementById('removeBannerBtn');
 
 // ===== Initialize App =====
-document.addEventListener('DOMContentLoaded', () => {
-    loadAirdrops();
-    loadCampaigns();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load data from Firestore (async)
+    await loadAirdropsFromDB();
+    await loadCampaignsFromDB();
+
+    // Create samples if no data exists
     createSampleAirdrops();
     createSampleCampaigns();
+
+    // Render UI
     renderAirdrops();
     renderCampaigns();
-    renderCampaignCarousel(); // Render AFTER samples are created
+    renderCampaignCarousel();
+    updateStats();
     setupEventListeners();
     startAutoSlide();
+    startCountdownTimers();
 });
 
 // ===== Event Listeners =====
@@ -102,8 +113,19 @@ function setupEventListeners() {
         btn.addEventListener('click', () => {
             const page = btn.dataset.page;
             switchPage(page);
+            // Close mobile menu after selection
+            navMenu.classList.remove('active');
+            mobileMenuToggle.classList.remove('active');
         });
     });
+
+    // Mobile menu toggle
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenuToggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+    }
 
     // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -119,6 +141,28 @@ function setupEventListeners() {
             renderAirdrops();
         });
     });
+
+    // Search input
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderAirdrops();
+        });
+    }
+
+    // Hero buttons
+    const heroExploreBtn = document.getElementById('heroExploreBtn');
+    const heroCreateBtn = document.getElementById('heroCreateBtn');
+
+    if (heroExploreBtn) {
+        heroExploreBtn.addEventListener('click', () => {
+            document.querySelector('.airdrops-section').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    if (heroCreateBtn) {
+        heroCreateBtn.addEventListener('click', openAdminPanel);
+    }
 
     // Campaign modal controls
     if (openCampaignBtn) {
@@ -171,6 +215,86 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Carousel controls
+    const carouselPrev = document.getElementById('carouselPrev');
+    const carouselNext = document.getElementById('carouselNext');
+
+    if (carouselPrev) {
+        carouselPrev.addEventListener('click', () => {
+            navigateCarousel(-1);
+        });
+    }
+
+    if (carouselNext) {
+        carouselNext.addEventListener('click', () => {
+            navigateCarousel(1);
+        });
+    }
+}
+
+// ===== Stats Functions =====
+function updateStats() {
+    const total = airdrops.length;
+    const active = airdrops.filter(a => {
+        if (a.deadline === 'Ongoing') return true;
+        return new Date(a.deadline) >= new Date();
+    }).length;
+
+    // Calculate total reward estimate
+    let totalReward = 0;
+    airdrops.forEach(a => {
+        const match = a.reward.match(/\$?([\d,]+)/g);
+        if (match) {
+            const highest = Math.max(...match.map(m => parseInt(m.replace(/[$,]/g, '')) || 0));
+            totalReward += highest;
+        }
+    });
+
+    const formatReward = totalReward >= 1000 ? `$${Math.round(totalReward / 1000)}K+` : `$${totalReward}`;
+
+    // Update all stats elements
+    const statsElements = {
+        'statTotalAirdrops': total,
+        'statActiveAirdrops': active,
+        'statTotalReward': formatReward,
+        'dashTotalAirdrops': total,
+        'dashActiveAirdrops': active,
+        'dashTotalCampaigns': campaigns.length,
+        'dashTotalReward': formatReward,
+        'footerTotalAirdrops': total
+    };
+
+    Object.entries(statsElements).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) {
+            animateCounter(el, value);
+        }
+    });
+}
+
+function animateCounter(element, target) {
+    if (typeof target === 'string') {
+        element.textContent = target;
+        return;
+    }
+
+    const duration = 1000;
+    const start = parseInt(element.textContent) || 0;
+    const increment = (target - start) / (duration / 16);
+    let current = start;
+
+    const animate = () => {
+        current += increment;
+        if ((increment > 0 && current >= target) || (increment < 0 && current <= target)) {
+            element.textContent = target;
+        } else {
+            element.textContent = Math.round(current);
+            requestAnimationFrame(animate);
+        }
+    };
+
+    animate();
 }
 
 // ===== Modal Functions =====
@@ -189,8 +313,8 @@ function resetForm() {
     airdropForm.reset();
     clearImage();
     editingId = null;
-    document.querySelector('.panel-header h3').textContent = 'Buat Info Airdrop Baru';
-    document.querySelector('.btn-primary').textContent = 'Publikasikan Airdrop';
+    document.querySelector('#adminPanel .panel-header h3').textContent = 'Buat Info Airdrop Baru';
+    document.querySelector('#adminPanel .btn-primary').textContent = 'Publikasikan Airdrop';
 }
 
 // ===== Image Upload Functions =====
@@ -198,13 +322,11 @@ function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
         alert('Please upload an image file');
         return;
     }
 
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
         alert('File size must be less than 5MB');
         return;
@@ -240,6 +362,8 @@ function handleFormSubmit(e) {
         deadline: document.getElementById('airdropDeadline').value || 'Ongoing',
         website: document.getElementById('airdropWebsite').value,
         category: document.getElementById('airdropCategory').value,
+        network: document.getElementById('airdropNetwork').value,
+        difficulty: document.getElementById('airdropDifficulty').value,
         steps: document.getElementById('airdropSteps').value,
         logo: currentImageData,
         createdAt: editingId ? airdrops.find(a => a.id === editingId).createdAt : new Date().toISOString()
@@ -247,27 +371,19 @@ function handleFormSubmit(e) {
 
 
     if (editingId) {
-        // Update existing airdrop
         const index = airdrops.findIndex(a => a.id === editingId);
         if (index !== -1) {
             airdrops[index] = formData;
         }
         editingId = null;
     } else {
-        // Add to airdrops array
         airdrops.unshift(formData);
     }
 
-    // Save to localStorage
     saveAirdrops();
-
-    // Re-render
     renderAirdrops();
-
-    // Close panel and reset form
+    updateStats();
     closeAdminPanel();
-
-    // Show success message
     showNotification('Airdrop berhasil dipublikasikan! 🎉');
 }
 
@@ -275,7 +391,6 @@ function handleFormSubmit(e) {
 function switchPage(page) {
     currentPage = page;
 
-    // Update active state
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.page === page) {
@@ -283,15 +398,17 @@ function switchPage(page) {
         }
     });
 
-
     const airdropsSection = document.querySelector('.airdrops-section');
     const heroSection = document.querySelector('.hero');
+    const statsDashboard = document.querySelector('.stats-dashboard');
+    const carouselSection = document.querySelector('.campaign-carousel-section');
     const campaignsSection = document.getElementById('campaignsSection');
 
-    // Show/hide sections based on page
     if (page === 'campaign') {
         if (airdropsSection) airdropsSection.style.display = 'none';
         if (heroSection) heroSection.style.display = 'none';
+        if (statsDashboard) statsDashboard.style.display = 'none';
+        if (carouselSection) carouselSection.style.display = 'none';
         if (campaignsSection) {
             campaignsSection.style.display = 'block';
             renderCampaigns();
@@ -299,25 +416,86 @@ function switchPage(page) {
     } else if (page === 'home') {
         if (airdropsSection) airdropsSection.style.display = 'block';
         if (heroSection) heroSection.style.display = 'block';
+        if (statsDashboard) statsDashboard.style.display = 'block';
+        if (carouselSection) carouselSection.style.display = 'block';
         if (campaignsSection) campaignsSection.style.display = 'none';
     } else {
-        // Show notification for other pages
         showNotification(`Halaman ${page.charAt(0).toUpperCase() + page.slice(1)} sedang dalam pengembangan! 🚧`);
     }
+}
+
+// ===== Countdown Timer =====
+function getCountdown(deadline) {
+    if (deadline === 'Ongoing') return null;
+
+    const now = new Date().getTime();
+    const end = new Date(deadline).getTime();
+    const diff = end - now;
+
+    if (diff <= 0) return { expired: true };
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    return { days, hours, minutes, seconds };
+}
+
+function startCountdownTimers() {
+    setInterval(() => {
+        document.querySelectorAll('.countdown-timer').forEach(timer => {
+            const deadline = timer.dataset.deadline;
+            const countdown = getCountdown(deadline);
+
+            if (countdown && !countdown.expired) {
+                timer.innerHTML = `
+                    <div class="countdown-item">
+                        <span class="countdown-value">${countdown.days}</span>
+                        <span class="countdown-label">Hari</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="countdown-value">${countdown.hours}</span>
+                        <span class="countdown-label">Jam</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="countdown-value">${countdown.minutes}</span>
+                        <span class="countdown-label">Min</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="countdown-value">${countdown.seconds}</span>
+                        <span class="countdown-label">Det</span>
+                    </div>
+                `;
+            } else if (countdown && countdown.expired) {
+                timer.innerHTML = '<div class="countdown-item"><span class="countdown-value" style="color: var(--danger-color);">Expired</span></div>';
+            }
+        });
+    }, 1000);
 }
 
 // ===== Render Functions =====
 function renderAirdrops() {
     let filteredAirdrops = airdrops;
 
-    // Apply filters
+    // Apply search filter
+    if (searchQuery) {
+        filteredAirdrops = filteredAirdrops.filter(a =>
+            a.title.toLowerCase().includes(searchQuery) ||
+            a.description.toLowerCase().includes(searchQuery) ||
+            a.category.toLowerCase().includes(searchQuery) ||
+            (a.network && a.network.toLowerCase().includes(searchQuery))
+        );
+    }
+
+    // Apply category filters
     if (currentFilter === 'active') {
-        filteredAirdrops = airdrops.filter(a => {
+        filteredAirdrops = filteredAirdrops.filter(a => {
             if (a.deadline === 'Ongoing') return true;
             return new Date(a.deadline) >= new Date();
         });
     } else if (currentFilter === 'upcoming') {
-        filteredAirdrops = airdrops.filter(a => {
+        filteredAirdrops = filteredAirdrops.filter(a => {
             if (a.deadline === 'Ongoing') return false;
             const deadline = new Date(a.deadline);
             const now = new Date();
@@ -330,19 +508,17 @@ function renderAirdrops() {
         airdropsGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 4rem 0;">
                 <p style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 1rem;">
-                    ${airdrops.length === 0 ? 'Belum ada airdrop yang dipublikasikan' : 'Tidak ada airdrop yang sesuai filter'}
+                    ${searchQuery ? 'Tidak ada airdrop yang cocok dengan pencarian' : (airdrops.length === 0 ? 'Belum ada airdrop yang dipublikasikan' : 'Tidak ada airdrop yang sesuai filter')}
                 </p>
                 <p style="color: var(--text-secondary);">
-                    ${airdrops.length === 0 ? 'Klik tombol "Buat Airdrop" untuk menambahkan info airdrop pertama' : 'Coba filter lain atau reset filter'}
+                    ${searchQuery ? 'Coba kata kunci lain' : (airdrops.length === 0 ? 'Klik tombol "Buat Airdrop" untuk menambahkan info airdrop pertama' : 'Coba filter lain atau reset filter')}
                 </p>
             </div>
         `;
-        if (totalAirdropsEl) totalAirdropsEl.textContent = airdrops.length;
         return;
     }
 
     airdropsGrid.innerHTML = filteredAirdrops.map(airdrop => createAirdropCard(airdrop)).join('');
-    if (totalAirdropsEl) totalAirdropsEl.textContent = airdrops.length;
 }
 
 function createAirdropCard(airdrop) {
@@ -354,16 +530,44 @@ function createAirdropCard(airdrop) {
         ? new Date(airdrop.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
         : 'Ongoing';
 
+    const networkClass = airdrop.network ? airdrop.network.toLowerCase() : 'multichain';
+    const difficultyClass = airdrop.difficulty ? airdrop.difficulty.toLowerCase() : 'medium';
+
+    const countdown = getCountdown(airdrop.deadline);
+    const countdownHtml = countdown && !countdown.expired ? `
+        <div class="countdown-timer" data-deadline="${airdrop.deadline}">
+            <div class="countdown-item">
+                <span class="countdown-value">${countdown.days}</span>
+                <span class="countdown-label">Hari</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-value">${countdown.hours}</span>
+                <span class="countdown-label">Jam</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-value">${countdown.minutes}</span>
+                <span class="countdown-label">Min</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-value">${countdown.seconds}</span>
+                <span class="countdown-label">Det</span>
+            </div>
+        </div>
+    ` : '';
+
     return `
         <div class="airdrop-card" data-id="${airdrop.id}">
+            <span class="network-badge ${networkClass}">${airdrop.network || 'Multichain'}</span>
             <div class="card-header">
                 ${logoHtml}
                 <div class="card-title-section">
                     <h4 class="card-title">${airdrop.title}</h4>
                     <span class="card-category">${airdrop.category}</span>
+                    <span class="difficulty-badge ${difficultyClass}">${airdrop.difficulty || 'Medium'}</span>
                 </div>
             </div>
             <p class="card-description">${airdrop.description}</p>
+            ${countdownHtml}
             <div class="card-info">
                 <div class="info-item">
                     <span class="info-label">Reward</span>
@@ -400,10 +604,14 @@ function viewDetails(id) {
                 <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">&times;</button>
             </div>
             <div style="padding: 2rem;">
-                <div style="display: flex; gap: 2rem; margin-bottom: 2rem;">
+                <div style="display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap;">
                     ${airdrop.logo ? `<img src="${airdrop.logo}" style="width: 120px; height: 120px; border-radius: 16px; object-fit: cover;">` : ''}
                     <div>
-                        <span class="card-category" style="margin-bottom: 1rem; display: inline-block;">${airdrop.category}</span>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                            <span class="card-category">${airdrop.category}</span>
+                            <span class="network-badge ${(airdrop.network || 'multichain').toLowerCase()}" style="position: static;">${airdrop.network || 'Multichain'}</span>
+                            <span class="difficulty-badge ${(airdrop.difficulty || 'medium').toLowerCase()}">${airdrop.difficulty || 'Medium'}</span>
+                        </div>
                         <h4 style="margin-bottom: 0.5rem;">Reward: <span style="color: var(--primary-color);">${airdrop.reward}</span></h4>
                         <p style="color: var(--text-muted);">Deadline: ${airdrop.deadline !== 'Ongoing' ? new Date(airdrop.deadline).toLocaleDateString('id-ID') : 'Ongoing'}</p>
                     </div>
@@ -460,15 +668,25 @@ function joinAirdrop(id) {
     }
 }
 
-// ===== Local Storage =====
-function saveAirdrops() {
+// ===== Database Storage (Firebase Firestore) =====
+async function saveAirdrops() {
+    // Save to Firestore
+    await saveAirdropsToFirestore(airdrops);
+    // Also keep localStorage as backup
     localStorage.setItem('airdrops', JSON.stringify(airdrops));
 }
 
-function loadAirdrops() {
-    const saved = localStorage.getItem('airdrops');
-    if (saved) {
-        airdrops = JSON.parse(saved);
+async function loadAirdropsFromDB() {
+    // Try to load from Firestore first
+    const firestoreData = await loadAirdropsFromFirestore();
+    if (firestoreData && firestoreData.length > 0) {
+        airdrops = firestoreData;
+    } else {
+        // Fallback to localStorage
+        const saved = localStorage.getItem('airdrops');
+        if (saved) {
+            airdrops = JSON.parse(saved);
+        }
     }
 }
 
@@ -487,6 +705,7 @@ function showNotification(message) {
         z-index: 3000;
         animation: slideIn 0.3s ease;
         font-weight: 600;
+        max-width: 300px;
     `;
     notification.textContent = message;
     document.body.appendChild(notification);
@@ -523,9 +742,8 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// ===== Sample Data =====
+// ===== Sample Data - 12 Airdrops =====
 function createSampleAirdrops() {
-    // Only create samples if no airdrops exist
     if (airdrops.length > 0) return;
 
     const samples = [
@@ -537,6 +755,8 @@ function createSampleAirdrops() {
             deadline: '2026-03-31',
             website: 'https://layerzero.network',
             category: 'Layer 2',
+            network: 'Multichain',
+            difficulty: 'Medium',
             steps: '1. Kunjungi website LayerZero\n2. Connect wallet (MetaMask/WalletConnect)\n3. Bridge token antar chain\n4. Lakukan minimal 5 transaksi\n5. Tunggu snapshot airdrop',
             logo: null,
             createdAt: new Date().toISOString()
@@ -549,6 +769,8 @@ function createSampleAirdrops() {
             deadline: 'Ongoing',
             website: 'https://zksync.io',
             category: 'Layer 2',
+            network: 'Ethereum',
+            difficulty: 'Medium',
             steps: '1. Bridge ETH ke zkSync Era\n2. Swap token di DEX (SyncSwap, Mute)\n3. Provide liquidity\n4. Mint NFT di zkSync\n5. Gunakan aplikasi DeFi',
             logo: null,
             createdAt: new Date().toISOString()
@@ -561,7 +783,135 @@ function createSampleAirdrops() {
             deadline: '2026-06-30',
             website: 'https://starknet.io',
             category: 'Layer 2',
+            network: 'Ethereum',
+            difficulty: 'Hard',
             steps: '1. Bridge ke Starknet\n2. Deploy smart contract wallet\n3. Gunakan dApps (JediSwap, mySwap)\n4. Participate in governance\n5. Hold STRK tokens',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 4,
+            title: 'Scroll Airdrop',
+            description: 'Scroll adalah zkEVM Layer 2 yang kompatibel dengan Ethereum. Early adopters yang aktif menggunakan testnet dan mainnet berpotensi mendapat airdrop.',
+            reward: '$300 - $1,500',
+            deadline: '2026-04-15',
+            website: 'https://scroll.io',
+            category: 'Layer 2',
+            network: 'Ethereum',
+            difficulty: 'Easy',
+            steps: '1. Bridge ETH ke Scroll\n2. Gunakan DEX seperti SyncSwap\n3. Mint NFT di ekosistem Scroll\n4. Interaksi dengan smart contracts\n5. Konsistensi penggunaan',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 5,
+            title: 'Base Network Rewards',
+            description: 'Base adalah Layer 2 dari Coinbase. Pengguna aktif yang berinteraksi dengan ekosistem Base berpotensi mendapatkan rewards dan airdrops.',
+            reward: '$200 - $800',
+            deadline: 'Ongoing',
+            website: 'https://base.org',
+            category: 'Layer 2',
+            network: 'Ethereum',
+            difficulty: 'Easy',
+            steps: '1. Bridge ETH ke Base\n2. Swap di Uniswap atau Aerodrome\n3. Mint Onchain Summer NFTs\n4. Gunakan friend.tech\n5. Eksplorasi dApps baru',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 6,
+            title: 'Linea Voyage Rewards',
+            description: 'Linea adalah zkEVM Layer 2 dari ConsenSys. Program Voyage memberikan NFT dan potensi airdrop untuk pengguna aktif.',
+            reward: '$400 - $2,000',
+            deadline: '2026-05-20',
+            website: 'https://linea.build',
+            category: 'Layer 2',
+            network: 'Ethereum',
+            difficulty: 'Medium',
+            steps: '1. Bridge ke Linea\n2. Complete Voyage quests\n3. Gunakan DEX dan lending protocols\n4. Kumpulkan XP points\n5. Claim Voyage NFTs',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 7,
+            title: 'Eigenlayer Points',
+            description: 'Eigenlayer adalah restaking protocol di Ethereum. Stake ETH atau LSTs untuk mengumpulkan points yang bisa dikonversi ke tokens.',
+            reward: '$1,000 - $10,000',
+            deadline: 'Ongoing',
+            website: 'https://eigenlayer.xyz',
+            category: 'DeFi',
+            network: 'Ethereum',
+            difficulty: 'Medium',
+            steps: '1. Beli ETH atau LST (stETH, rETH)\n2. Kunjungi Eigenlayer app\n3. Restake tokens Anda\n4. Delegate ke operator\n5. Kumpulkan restaking points',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 8,
+            title: 'Blast Big Bang',
+            description: 'Blast adalah Layer 2 dengan native yield untuk ETH dan stablecoins. Program Big Bang memberikan points yang bisa ditukar dengan tokens.',
+            reward: '$500 - $5,000',
+            deadline: '2026-02-28',
+            website: 'https://blast.io',
+            category: 'Layer 2',
+            network: 'Ethereum',
+            difficulty: 'Easy',
+            steps: '1. Bridge ETH ke Blast\n2. Hold ETH untuk auto-yield\n3. Gunakan dApps di ekosistem\n4. Invite friends untuk bonus\n5. Kumpulkan Blast Points',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 9,
+            title: 'Jupiter Exchange Airdrop',
+            description: 'Jupiter adalah DEX aggregator terbesar di Solana. Program rewards untuk active traders dan liquidity providers.',
+            reward: '$100 - $1,000',
+            deadline: 'Ongoing',
+            website: 'https://jup.ag',
+            category: 'DeFi',
+            network: 'Solana',
+            difficulty: 'Easy',
+            steps: '1. Connect Solana wallet\n2. Trade secara regular\n3. Gunakan limit orders\n4. Stake JUP tokens\n5. Vote di governance',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 10,
+            title: 'Magic Eden Rewards',
+            description: 'Magic Eden adalah NFT marketplace terkemuka. Program rewards untuk collectors dan traders NFT aktif.',
+            reward: '$50 - $500',
+            deadline: '2026-04-01',
+            website: 'https://magiceden.io',
+            category: 'NFT',
+            network: 'Multichain',
+            difficulty: 'Easy',
+            steps: '1. Connect wallet\n2. List dan trade NFTs\n3. Complete daily missions\n4. Collect Diamond rewards\n5. Participate in launches',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 11,
+            title: 'Polymarket Trading Rewards',
+            description: 'Polymarket adalah prediction market terbesar. Active traders berpotensi mendapat rewards dari trading activity.',
+            reward: '$200 - $2,000',
+            deadline: 'Ongoing',
+            website: 'https://polymarket.com',
+            category: 'DeFi',
+            network: 'Polygon',
+            difficulty: 'Medium',
+            steps: '1. Deposit USDC ke Polymarket\n2. Trade prediction markets\n3. Provide liquidity\n4. Jaga win rate yang baik\n5. Trading volume konsisten',
+            logo: null,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 12,
+            title: 'Zora Network Rewards',
+            description: 'Zora adalah NFT protocol dan network. Creators dan collectors aktif berpotensi mendapatkan rewards.',
+            reward: '$100 - $800',
+            deadline: '2026-05-15',
+            website: 'https://zora.co',
+            category: 'NFT',
+            network: 'Ethereum',
+            difficulty: 'Easy',
+            steps: '1. Connect wallet ke Zora\n2. Mint dan collect NFTs\n3. Create original content\n4. Bridge ke Zora Network\n5. Engage dengan community',
             logo: null,
             createdAt: new Date().toISOString()
         }
@@ -578,16 +928,16 @@ function editAirdrop(id) {
 
     editingId = id;
 
-    // Fill form with existing data
     document.getElementById('airdropTitle').value = airdrop.title;
     document.getElementById('airdropDescription').value = airdrop.description;
     document.getElementById('airdropReward').value = airdrop.reward === 'TBA' ? '' : airdrop.reward;
     document.getElementById('airdropDeadline').value = airdrop.deadline === 'Ongoing' ? '' : airdrop.deadline;
     document.getElementById('airdropWebsite').value = airdrop.website || '';
     document.getElementById('airdropCategory').value = airdrop.category;
+    document.getElementById('airdropNetwork').value = airdrop.network || 'Ethereum';
+    document.getElementById('airdropDifficulty').value = airdrop.difficulty || 'Medium';
     document.getElementById('airdropSteps').value = airdrop.steps || '';
 
-    // Set image if exists
     if (airdrop.logo) {
         currentImageData = airdrop.logo;
         previewImg.src = currentImageData;
@@ -595,9 +945,8 @@ function editAirdrop(id) {
         imagePreview.style.display = 'block';
     }
 
-    // Change panel title
-    document.querySelector('.panel-header h3').textContent = 'Edit Info Airdrop';
-    document.querySelector('.btn-primary').textContent = 'Update Airdrop';
+    document.querySelector('#adminPanel .panel-header h3').textContent = 'Edit Info Airdrop';
+    document.querySelector('#adminPanel .btn-primary').textContent = 'Update Airdrop';
 
     openAdminPanel();
 }
@@ -608,12 +957,31 @@ function deleteAirdrop(id) {
     airdrops = airdrops.filter(a => a.id !== id);
     saveAirdrops();
     renderAirdrops();
+    updateStats();
     showNotification('Airdrop berhasil dihapus! 🗑️');
 }
-// ===== Campaign Functions =====
 
-// Campaign Modal Functions
-function openCampaignPanel() {
+// ===== Campaign Functions =====
+async function openCampaignPanel() {
+    // Check wallet connection first
+    if (!walletConnected) {
+        showNotification('⚠️ Hubungkan wallet Phantom terlebih dahulu untuk membuat Star Kampanye');
+        // Try to connect wallet
+        const connected = await connectWallet();
+        if (!connected) return;
+    }
+
+    // Check if admin (free access) or needs payment
+    if (!isAdmin) {
+        showNotification('💳 Pembayaran diperlukan untuk membuat Star Kampanye (0.01 SOL)');
+        const paid = await payForCampaign();
+        if (!paid) {
+            showNotification('❌ Pembayaran dibatalkan. Tidak dapat membuat kampanye.');
+            return;
+        }
+    }
+
+    // Open the panel
     if (campaignPanel) {
         campaignPanel.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -634,9 +1002,9 @@ function resetCampaignForm() {
     }
     clearLogo();
     clearBanner();
+    editingCampaignId = null;
 }
 
-// Campaign Upload Functions
 function handleLogoUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -701,12 +1069,11 @@ function clearBanner() {
     if (bannerPreview) bannerPreview.style.display = 'none';
 }
 
-// Campaign Form Submission
 function handleCampaignSubmit(e) {
     e.preventDefault();
 
     const formData = {
-        id: Date.now(),
+        id: editingCampaignId || Date.now(),
         name: document.getElementById('campaignName').value,
         description: document.getElementById('campaignDescription').value,
         website: document.getElementById('campaignWebsite').value,
@@ -715,18 +1082,28 @@ function handleCampaignSubmit(e) {
         endDate: document.getElementById('campaignEndDate').value || 'Ongoing',
         logo: currentLogoData,
         banner: currentBannerData,
-        createdAt: new Date().toISOString()
+        isStar: editingCampaignId ? campaigns.find(c => c.id === editingCampaignId)?.isStar || true : true,
+        createdAt: editingCampaignId ? campaigns.find(c => c.id === editingCampaignId).createdAt : new Date().toISOString()
     };
 
-    campaigns.unshift(formData);
+    if (editingCampaignId) {
+        const index = campaigns.findIndex(c => c.id === editingCampaignId);
+        if (index !== -1) {
+            campaigns[index] = formData;
+        }
+        editingCampaignId = null;
+    } else {
+        campaigns.unshift(formData);
+    }
+
     saveCampaigns();
     renderCampaigns();
-    renderCampaignCarousel(); // Update carousel with new campaign
+    renderCampaignCarousel();
+    updateStats();
     closeCampaignPanel();
-    showNotification('Kampanye berhasil dipublikasikan! ⭐');
+    showNotification(editingCampaignId ? 'Kampanye berhasil diupdate! ✨' : 'Kampanye berhasil dipublikasikan! ⭐');
 }
 
-// Campaign Render Functions
 function renderCampaigns() {
     if (!campaignsGrid) return;
 
@@ -783,112 +1160,171 @@ function createCampaignCard(campaign) {
                         <span class="campaign-info-value">${startDateFormatted} - ${endDateFormatted}</span>
                     </div>
                 </div>
-                ${campaign.website ? `
-                    <div style="margin-top: 1rem;">
-                        <a href="${campaign.website}" target="_blank" class="btn-action primary" style="display: block; text-align: center; text-decoration: none;">
-                            Kunjungi Website
-                        </a>
-                    </div>
-                ` : ''}
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button class="btn-action primary" onclick="visitCampaign(${campaign.id})" style="flex: 2;">Kunjungi</button>
+                    <button class="btn-action" onclick="editCampaign(${campaign.id})" style="flex: 1;">✏️</button>
+                    <button class="btn-action" onclick="deleteCampaign(${campaign.id})" style="flex: 1; border-color: #ff6b9d; color: #ff6b9d;">🗑️</button>
+                </div>
             </div>
         </div>
     `;
 }
 
-// Campaign Local Storage
-function saveCampaigns() {
+function visitCampaign(id) {
+    const campaign = campaigns.find(c => c.id === id);
+    if (campaign && campaign.website) {
+        window.open(campaign.website, '_blank');
+    } else {
+        showNotification('Website kampanye belum tersedia');
+    }
+}
+
+function editCampaign(id) {
+    const campaign = campaigns.find(c => c.id === id);
+    if (!campaign) return;
+
+    editingCampaignId = id;
+
+    document.getElementById('campaignName').value = campaign.name;
+    document.getElementById('campaignDescription').value = campaign.description;
+    document.getElementById('campaignWebsite').value = campaign.website || '';
+    document.getElementById('campaignBudget').value = campaign.budget === 'TBA' ? '' : campaign.budget;
+    document.getElementById('campaignStartDate').value = campaign.startDate === 'Sekarang' ? '' : campaign.startDate;
+    document.getElementById('campaignEndDate').value = campaign.endDate === 'Ongoing' ? '' : campaign.endDate;
+
+    if (campaign.logo) {
+        currentLogoData = campaign.logo;
+        logoPreviewImg.src = currentLogoData;
+        uploadLogoPlaceholder.style.display = 'none';
+        logoPreview.style.display = 'block';
+    }
+
+    if (campaign.banner) {
+        currentBannerData = campaign.banner;
+        bannerPreviewImg.src = currentBannerData;
+        uploadBannerPlaceholder.style.display = 'none';
+        bannerPreview.style.display = 'block';
+    }
+
+    document.querySelector('#campaignPanel .panel-header h3').textContent = 'Edit Kampanye';
+    document.querySelector('#campaignPanel .btn-primary').textContent = 'Update Kampanye';
+
+    openCampaignPanel();
+}
+
+function deleteCampaign(id) {
+    if (!confirm('Yakin ingin menghapus kampanye ini?')) return;
+
+    campaigns = campaigns.filter(c => c.id !== id);
+    saveCampaigns();
+    renderCampaigns();
+    renderCampaignCarousel();
+    updateStats();
+    showNotification('Kampanye berhasil dihapus! 🗑️');
+}
+
+async function saveCampaigns() {
+    // Save to Firestore
+    await saveCampaignsToFirestore(campaigns);
+    // Also keep localStorage as backup
     localStorage.setItem('campaigns', JSON.stringify(campaigns));
 }
 
-function loadCampaigns() {
-    const saved = localStorage.getItem('campaigns');
-    if (saved) {
-        campaigns = JSON.parse(saved);
-
-        // Migration: Add isStar property to old campaigns if missing
-        let needsMigration = false;
-        campaigns.forEach(campaign => {
-            if (campaign.isStar === undefined) {
-                campaign.isStar = false; // Default to false for old campaigns
-                needsMigration = true;
-            }
-        });
-
-        // Save migrated data
-        if (needsMigration) {
-            saveCampaigns();
+async function loadCampaignsFromDB() {
+    // Try to load from Firestore first
+    const firestoreData = await loadCampaignsFromFirestore();
+    if (firestoreData && firestoreData.length > 0) {
+        campaigns = firestoreData;
+    } else {
+        // Fallback to localStorage
+        const saved = localStorage.getItem('campaigns');
+        if (saved) {
+            campaigns = JSON.parse(saved);
         }
     }
 }
 
-// Sample Campaigns
+// ===== Sample Campaigns - 6 Campaigns =====
 function createSampleCampaigns() {
     if (campaigns.length > 0) return;
 
     const samples = [
         {
-            id: Date.now() + 1,
+            id: Date.now() + 100,
             name: 'Polygon zkEVM Campaign',
-            description: 'Join the future of Ethereum scaling with Polygon zkEVM. Participate in our testnet activities and get early access to exclusive features.',
+            description: 'Kampanye resmi dari Polygon untuk adopsi zkEVM. Dapatkan rewards dengan berinteraksi di ekosistem Polygon zkEVM.',
             website: 'https://polygon.technology',
             budget: '$50,000',
             startDate: '2026-01-01',
-            endDate: '2026-03-31',
-            logo: null,
-            banner: null,
-            isStar: true,  // ⭐ Star campaign untuk carousel
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: Date.now() + 2,
-            name: 'Arbitrum Odyssey',
-            description: 'Explore the Arbitrum ecosystem and complete on-chain quests to earn exclusive NFTs and future airdrop opportunities.',
-            website: 'https://arbitrum.io',
-            budget: '$100,000',
-            startDate: '2026-02-01',
-            endDate: '2026-04-30',
-            logo: null,
-            banner: null,
-            isStar: true,  // ⭐ Star campaign untuk carousel
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: Date.now() + 3,
-            name: 'LayerZero Airdrop',
-            description: 'LayerZero adalah protokol interoperabilitas omnichain yang memungkinkan pesan lintas berbagai blockchain dengan aman.',
-            website: 'https://layerzero.network',
-            budget: '$500 - $2,000',
-            startDate: '2026-01-15',
-            endDate: '2026-03-15',
-            logo: null,
-            banner: null,
-            isStar: true,  // ⭐ Star campaign untuk carousel
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: Date.now() + 4,
-            name: 'zkSync Era Airdrop',
-            description: 'zkSync adalah solusi scaling Layer 2 untuk Ethereum menggunakan teknologi zero-knowledge rollups.',
-            website: 'https://zksync.io',
-            budget: '$1,000 - $5,000',
-            startDate: '2026-01-10',
-            endDate: 'Ongoing',
-            logo: null,
-            banner: null,
-            isStar: false,  // Regular campaign
-            createdAt: new Date().toISOString()
-        },
-        {
-            id: Date.now() + 5,
-            name: 'Starknet Airdrop',
-            description: 'Starknet adalah Layer 2 scaling solution menggunakan STARK proofs. Airdrop untuk early adopters dan contributors.',
-            website: 'https://starknet.io',
-            budget: '$800 - $3,000',
-            startDate: '2026-01-20',
             endDate: '2026-06-30',
             logo: null,
             banner: null,
-            isStar: false,  // Regular campaign
+            isStar: true,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 101,
+            name: 'Arbitrum Odyssey',
+            description: 'Program rewards untuk pengguna aktif Arbitrum. Complete quests dan earn NFTs serta token rewards.',
+            website: 'https://arbitrum.io',
+            budget: '$100,000',
+            startDate: '2026-01-15',
+            endDate: '2026-04-15',
+            logo: null,
+            banner: null,
+            isStar: true,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 102,
+            name: 'Optimism RetroPGF',
+            description: 'Retroactive Public Goods Funding dari Optimism. Kontribusi ke ekosistem dan dapatkan rewards.',
+            website: 'https://optimism.io',
+            budget: '$200,000',
+            startDate: 'Sekarang',
+            endDate: 'Ongoing',
+            logo: null,
+            banner: null,
+            isStar: true,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 103,
+            name: 'Mantle Journey',
+            description: 'Program incentive dari Mantle Network untuk early adopters. Bridge dan gunakan dApps untuk earn rewards.',
+            website: 'https://mantle.xyz',
+            budget: '$30,000',
+            startDate: '2026-02-01',
+            endDate: '2026-05-01',
+            logo: null,
+            banner: null,
+            isStar: true,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 104,
+            name: 'Mode Network Airdrop',
+            description: 'Mode adalah Layer 2 dengan focus DeFi. Early users berpotensi mendapat MODE token airdrop.',
+            website: 'https://mode.network',
+            budget: '$25,000',
+            startDate: '2026-01-10',
+            endDate: '2026-03-31',
+            logo: null,
+            banner: null,
+            isStar: true,
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: Date.now() + 105,
+            name: 'Manta Pacific Campaign',
+            description: 'Manta Pacific adalah modular L2 untuk ZK applications. Stake dan earn rewards dari New Paradigm.',
+            website: 'https://manta.network',
+            budget: '$40,000',
+            startDate: 'Sekarang',
+            endDate: '2026-04-30',
+            logo: null,
+            banner: null,
+            isStar: true,
             createdAt: new Date().toISOString()
         }
     ];
@@ -897,178 +1333,94 @@ function createSampleCampaigns() {
     saveCampaigns();
 }
 
-// ===== Campaign Carousel Functions =====
-
-// Carousel DOM Elements
-const carouselTrack = document.getElementById('carouselTrack');
-const carouselPrev = document.getElementById('carouselPrev');
-const carouselNext = document.getElementById('carouselNext');
-const carouselIndicators = document.getElementById('carouselIndicators');
-const carouselContainer = document.getElementById('campaignCarousel');
-
-// Render campaign carousel on homepage
+// ===== Carousel Functions =====
 function renderCampaignCarousel() {
-    if (!carouselTrack) return;
+    const carouselTrack = document.getElementById('carouselTrack');
+    const carouselIndicators = document.getElementById('carouselIndicators');
+    const carouselContainer = document.querySelector('.carousel-container');
 
-    // Filter untuk only star campaigns
-    const starCampaigns = campaigns.filter(c => c.isStar === true);
+    if (!carouselTrack || !carouselIndicators || !carouselContainer) return;
+
+    const starCampaigns = campaigns.filter(c => c.isStar);
 
     if (starCampaigns.length === 0) {
-        carouselTrack.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 2rem;">Belum ada kampanye star</p>`;
-        // Hide indicators dan arrows jika kosong
-        if (carouselIndicators) carouselIndicators.innerHTML = '';
+        carouselTrack.innerHTML = `
+            <div style="width: 100%; text-align: center; padding: 4rem;">
+                <p style="color: var(--text-muted);">Belum ada Star Kampanye</p>
+            </div>
+        `;
+        carouselIndicators.innerHTML = '';
         return;
     }
 
-    // Render star campaign cards only
-    carouselTrack.innerHTML = starCampaigns.map(campaign => createCampaignCardForCarousel(campaign)).join('');
+    carouselTrack.innerHTML = starCampaigns.map(campaign => createCampaignCard(campaign)).join('');
 
-    // Setup indicators based on star campaigns
+    carouselIndicators.innerHTML = starCampaigns.map((_, index) => `
+        <button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-index="${index}"></button>
+    `).join('');
+
+    // Add click handlers for indicators
+    carouselIndicators.querySelectorAll('.carousel-indicator').forEach(indicator => {
+        indicator.addEventListener('click', () => {
+            const index = parseInt(indicator.dataset.index);
+            goToSlide(index);
+        });
+    });
+
+    currentSlide = 0;
+    updateCarouselPosition();
+}
+
+function navigateCarousel(direction) {
+    const starCampaigns = campaigns.filter(c => c.isStar);
+    if (starCampaigns.length === 0) return;
+
+    currentSlide += direction;
+
+    if (currentSlide < 0) {
+        currentSlide = starCampaigns.length - 1;
+    } else if (currentSlide >= starCampaigns.length) {
+        currentSlide = 0;
+    }
+
+    updateCarouselPosition();
+}
+
+function goToSlide(index) {
+    currentSlide = index;
+    updateCarouselPosition();
+}
+
+function updateCarouselPosition() {
+    const carouselTrack = document.getElementById('carouselTrack');
+    const carouselIndicators = document.getElementById('carouselIndicators');
+    const carouselContainer = document.querySelector('.carousel-container');
+
+    if (!carouselTrack || !carouselContainer) return;
+
+    // Use pixel-based translation for accurate positioning
+    const containerWidth = carouselContainer.offsetWidth;
+    const translateValue = currentSlide * containerWidth;
+    carouselTrack.style.transform = `translateX(-${translateValue}px)`;
+
     if (carouselIndicators) {
-        const numSlides = starCampaigns.length; // Each star campaign is a slide
-        carouselIndicators.innerHTML = Array.from({ length: numSlides }, (_, i) =>
-            `<button class="carousel-indicator ${i === 0 ? 'active' : ''}" data-slide="${i}"></button>`
-        ).join('');
-
-        // Add indicator click listeners
-        document.querySelectorAll('.carousel-indicator').forEach(indicator => {
-            indicator.addEventListener('click', (e) => {
-                const slideIndex = parseInt(e.target.dataset.slide);
-                goToSlide(slideIndex);
-            });
+        carouselIndicators.querySelectorAll('.carousel-indicator').forEach((indicator, index) => {
+            indicator.classList.toggle('active', index === currentSlide);
         });
     }
-
-    // Setup navigation buttons
-    if (carouselPrev) {
-        carouselPrev.addEventListener('click', () => slideCarousel('prev'));
-    }
-    if (carouselNext) {
-        carouselNext.addEventListener('click', () => slideCarousel('next'));
-    }
-
-    // Pause on hover
-    if (carouselContainer) {
-        carouselContainer.addEventListener('mouseenter', pauseAutoSlide);
-        carouselContainer.addEventListener('mouseleave', startAutoSlide);
-    }
 }
 
-// Create campaign card for carousel (reuse campaign card structure)
-function createCampaignCardForCarousel(campaign) {
-    const logoHtml = campaign.logo
-        ? `<img src="${campaign.logo}" alt="${campaign.name}" class="campaign-logo">`
-        : `<div class="campaign-logo-placeholder">${campaign.name.charAt(0)}</div>`;
-
-    const bannerHtml = campaign.banner
-        ? `<img src="${campaign.banner}" alt="${campaign.name} Banner" class="campaign-banner">`
-        : `<div class="campaign-banner"></div>`;
-
-    const startDateFormatted = campaign.startDate !== 'Sekarang'
-        ? new Date(campaign.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-        : 'Sekarang';
-
-    const endDateFormatted = campaign.endDate !== 'Ongoing'
-        ? new Date(campaign.endDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-        : 'Ongoing';
-
-    return `
-        <div class="campaign-card" data-id="${campaign.id}">
-            ${bannerHtml}
-            <div class="campaign-content">
-                ${logoHtml}
-                <h4 class="campaign-name">${campaign.name}</h4>
-                <p class="campaign-description">${campaign.description}</p>
-                <div class="campaign-info">
-                    ${campaign.budget !== 'TBA' ? `
-                        <div class="campaign-info-item">
-                            <span class="campaign-info-label">Budget</span>
-                            <span class="campaign-info-value">${campaign.budget}</span>
-                        </div>
-                    ` : ''}
-                    <div class="campaign-info-item">
-                        <span class="campaign-info-label">Periode</span>
-                        <span class="campaign-info-value">${startDateFormatted} - ${endDateFormatted}</span>
-                    </div>
-                </div>
-                ${campaign.website ? `
-                    <div style="margin-top: 1rem;">
-                        <a href="${campaign.website}" target="_blank" class="btn-action primary" style="display: block; text-align: center; text-decoration: none;">
-                            Kunjungi Website
-                        </a>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
-
-// Slide carousel to prev/next
-function slideCarousel(direction) {
-    const numSlides = campaigns.length; // Each campaign is a slide
-
-    if (direction === 'next') {
-        currentSlide = (currentSlide + 1) % numSlides;
-    } else {
-        currentSlide = (currentSlide - 1 + numSlides) % numSlides;
-    }
-
-    goToSlide(currentSlide);
-}
-
-// Go to specific slide
-function goToSlide(slideIndex) {
-    currentSlide = slideIndex;
-
-    // Update transform - each card takes full container width
-    if (carouselTrack) {
-        // Since each card is min-width: 100%, we shift by full container width per slide
-        // The gap is between cards, so we calculate: slideIndex * (100% of container + gap)
-        const container = carouselTrack.parentElement;
-        if (container && slideIndex > 0) {
-            const containerWidth = container.offsetWidth;
-            // Get gap value from CSS (--spacing-xl, typically 2rem = 32px)
-            const computedStyle = window.getComputedStyle(carouselTrack);
-            const gap = parseFloat(computedStyle.gap) || 32; // fallback to 32px
-
-            // Calculate total offset: each slide = containerWidth + gap
-            const offset = -slideIndex * (containerWidth + gap);
-            carouselTrack.style.transform = `translateX(${offset}px)`;
-        } else {
-            carouselTrack.style.transform = 'translateX(0)';
-        }
-    }
-
-    // Update indicators
-    document.querySelectorAll('.carousel-indicator').forEach((indicator, index) => {
-        indicator.classList.toggle('active', index === slideIndex);
-    });
-}
-
-// Auto-slide functionality
 function startAutoSlide() {
-    stopAutoSlide(); // Clear any existing interval
-
-    autoSlideInterval = setInterval(() => {
-        slideCarousel('next');
-    }, 5000); // Slide every 5 seconds
-}
-
-function stopAutoSlide() {
     if (autoSlideInterval) {
         clearInterval(autoSlideInterval);
-        autoSlideInterval = null;
     }
+
+    autoSlideInterval = setInterval(() => {
+        navigateCarousel(1);
+    }, 5000);
 }
 
-function pauseAutoSlide() {
-    stopAutoSlide();
-}
-
-// Update footer airdrop count
-function updateFooterStats() {
-    const footerTotalAirdrops = document.getElementById('footerTotalAirdrops');
-    if (footerTotalAirdrops) {
-        footerTotalAirdrops.textContent = airdrops.length;
-    }
-}
+// Recalculate carousel position on window resize
+window.addEventListener('resize', () => {
+    updateCarouselPosition();
+});

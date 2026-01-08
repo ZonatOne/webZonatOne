@@ -45,13 +45,37 @@
 </head>
 
 <body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
                 <img src="logo.png" alt="ZonatOne Logo" class="brand-logo">
             </div>
-            <div class="nav-menu">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
                 <button class="nav-item active" data-page="home">
                     <span class="icon">🏠</span>
                     <span>Home</span>
@@ -77,12 +101,114 @@
                     <span>Star Kampanye</span>
                 </button>
             </div>
+            <!-- Wallet Connect -->
+            <div class="wallet-section">
+                <button class="btn-wallet" id="walletConnectBtn" onclick="connectWallet()">
+                    <span class="icon">💜</span>
+                    <span>Connect Wallet</span>
+                </button>
+                <div class="wallet-info" id="walletInfo" style="display: none;">
+                    <span class="admin-badge" id="adminBadge" style="display: none;">👑 Admin</span>
+                    <span class="wallet-address" id="walletAddress"></span>
+                    <button class="btn-disconnect" onclick="disconnectWallet()" title="Disconnect">✕</button>
+                </div>
+            </div>
             <button class="btn-create" id="openAdminBtn">
                 <span class="icon">➕</span>
                 <span>Buat Airdrop</span>
             </button>
         </div>
     </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badge">
+                        🔥 Best airdrop reset
+                    </div>
+                    <h1 class="hero-title">Temukan Airdrop Crypto Terbaik & Terpercaya</h1>
+                    <p class="hero-subtitle">
+                        Dapatkan informasi airdrop cryptocurrency terbaru setiap hari.
+                        Update 24/7, terverifikasi, dan 100% gratis!
+                    </p>
+                    <div class="hero-buttons">
+                        <button class="btn-hero primary" id="heroExploreBtn">
+                            🚀 Jelajahi Airdrop
+                        </button>
+                        <button class="btn-hero secondary" id="heroCreateBtn">
+                            ➕ Submit Airdrop
+                        </button>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-number" id="statTotalAirdrops">0</span>
+                            <span class="stat-label">Total Airdrop</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="statActiveAirdrops">0</span>
+                            <span class="stat-label">Aktif</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="statTotalReward">$0</span>
+                            <span class="stat-label">Total Reward</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="hero-card-stack">
+                        <div class="floating-card">
+                            <div class="card-icon">🪂</div>
+                            <h4>LayerZero</h4>
+                            <p>Bridge tokens across chains</p>
+                            <div class="reward">$500 - $2,000</div>
+                        </div>
+                        <div class="floating-card">
+                            <div class="card-icon">⚡</div>
+                            <h4>zkSync Era</h4>
+                            <p>Zero-knowledge rollups</p>
+                            <div class="reward">$1,000 - $5,000</div>
+                        </div>
+                        <div class="floating-card">
+                            <div class="card-icon">🌟</div>
+                            <h4>Starknet</h4>
+                            <p>STARK proofs scaling</p>
+                            <div class="reward">$800 - $3,000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Dashboard -->
+    <section class="stats-dashboard">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <div class="stats-icon">🪂</div>
+                    <span class="stats-value" id="dashTotalAirdrops">0</span>
+                    <span class="stats-label">Total Airdrop</span>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">✅</div>
+                    <span class="stats-value" id="dashActiveAirdrops">0</span>
+                    <span class="stats-label">Airdrop Aktif</span>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">⭐</div>
+                    <span class="stats-value" id="dashTotalCampaigns">0</span>
+                    <span class="stats-label">Star Kampanye</span>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">💰</div>
+                    <span class="stats-value" id="dashTotalReward">$50K+</span>
+                    <span class="stats-label">Total Reward</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Campaign Carousel Section -->
     <section class="campaign-carousel-section">
@@ -113,11 +239,20 @@
     <section class="airdrops-section">
         <div class="container">
             <div class="section-header">
-                <h3>Airdrop Terbaru</h3>
+                <h3>🪂 Airdrop Terbaru</h3>
                 <div class="filter-buttons">
                     <button class="filter-btn active">Semua</button>
                     <button class="filter-btn">Aktif</button>
                     <button class="filter-btn">Segera</button>
+                </div>
+            </div>
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Cari airdrop...">
+                    </div>
                 </div>
             </div>
             <div class="airdrops-grid" id="airdropsGrid">
@@ -172,6 +307,30 @@
                         <div class="form-group">
                             <label for="airdropDeadline">Deadline</label>
                             <input type="date" id="airdropDeadline">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="airdropNetwork">Network</label>
+                            <select id="airdropNetwork">
+                                <option value="Ethereum">Ethereum</option>
+                                <option value="BSC">BSC</option>
+                                <option value="Polygon">Polygon</option>
+                                <option value="Arbitrum">Arbitrum</option>
+                                <option value="Optimism">Optimism</option>
+                                <option value="Solana">Solana</option>
+                                <option value="Avalanche">Avalanche</option>
+                                <option value="Multichain">Multichain</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="airdropDifficulty">Difficulty</label>
+                            <select id="airdropDifficulty">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -375,6 +534,15 @@
             </div>
         </div>
     </footer>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <!-- Solana Web3 SDK -->
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="wallet-connect.js"></script>
 
     <script src="script.js"></script>
 </body>
