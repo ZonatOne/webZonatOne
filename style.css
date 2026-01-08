@@ -1098,6 +1098,29 @@ body {
     text-transform: uppercase;
 }
 
+.section-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fee-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(45, 96, 255, 0.15);
+    border: 1px solid rgba(45, 96, 255, 0.4);
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    color: #b0c4de;
+}
+
+.fee-badge strong {
+    color: #FFD700;
+    font-weight: 700;
+}
+
 .filter-buttons {
     display: flex;
     gap: var(--spacing-xs);
@@ -1752,19 +1775,21 @@ body {
 .campaign-card {
     background: var(--bg-card);
     backdrop-filter: blur(10px);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
+    border: 1px solid #2D60FF;
+    /* Solid Sci-Fi Blue Border */
+    border-radius: 8px;
     overflow: hidden;
     transition: all 0.3s ease;
     cursor: pointer;
     animation: fadeIn 0.5s ease;
     position: relative;
+    box-shadow: 0 0 15px rgba(45, 96, 255, 0.15);
 }
 
 .campaign-card:hover {
     transform: translateY(-8px);
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-glow);
+    border-color: #00D4FF;
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);
 }
 
 .campaign-banner {
