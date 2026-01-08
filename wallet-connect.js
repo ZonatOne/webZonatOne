@@ -3,7 +3,7 @@
 
 // ===== Configuration =====
 const ADMIN_WALLET = '8ZiNazfyXajh9C4jgFjPLrc8EKwKRSPLCG6Z8MA4cCpG';
-const CAMPAIGN_FEE_SOL = 0.01; // SOL (about $1-2)
+const CAMPAIGN_FEE_SOL = 0.4; // SOL (approx $57)
 
 // ===== Wallet State =====
 let walletConnected = false;

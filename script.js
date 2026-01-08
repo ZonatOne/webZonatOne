@@ -1003,7 +1003,7 @@ async function openCampaignPanel() {
 
     // Check if admin (free access) or needs payment
     if (!isAdmin) {
-        showNotification('💳 Pembayaran diperlukan untuk membuat Star Kampanye (0.01 SOL)');
+        showNotification('💳 Pembayaran diperlukan untuk membuat Star Kampanye ($57 / 0.4 SOL)');
         const paid = await payForCampaign();
         if (!paid) {
             showNotification('❌ Pembayaran dibatalkan. Tidak dapat membuat kampanye.');
