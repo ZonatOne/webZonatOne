@@ -264,108 +264,108 @@
                     <h3>Tambah Airdrop Baru</h3>
                     <button class="close-btn" id="closeAdminBtn">&times;</button>
                 </div>
+                <form id="airdropForm" class="airdrop-form">
+                    <div class="form-section">
+                        <h4>Informasi Dasar</h4>
+
+                        <div class="form-group">
+                            <label for="airdropTitle">Nama Airdrop *</label>
+                            <input type="text" id="airdropTitle" placeholder="Contoh: Arbitrum Airdrop" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="airdropDescription">Deskripsi *</label>
+                            <textarea id="airdropDescription" rows="4"
+                                placeholder="Jelaskan detail airdrop, syarat, dan cara mengikutinya..."
+                                required></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="airdropReward">Reward</label>
+                                <input type="text" id="airdropReward" placeholder="Contoh: $100 - $500">
+                            </div>
+                            <div class="form-group">
+                                <label for="airdropDeadline">Deadline</label>
+                                <input type="date" id="airdropDeadline">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="airdropNetwork">Network</label>
+                                <select id="airdropNetwork">
+                                    <option value="Ethereum">Ethereum</option>
+                                    <option value="BSC">BSC</option>
+                                    <option value="Polygon">Polygon</option>
+                                    <option value="Arbitrum">Arbitrum</option>
+                                    <option value="Optimism">Optimism</option>
+                                    <option value="Solana">Solana</option>
+                                    <option value="Avalanche">Avalanche</option>
+                                    <option value="Multichain">Multichain</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="airdropDifficulty">Difficulty</label>
+                                <select id="airdropDifficulty">
+                                    <option value="Easy">Easy</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Hard">Hard</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Logo Airdrop</h4>
+                        <div class="upload-area" id="uploadArea">
+                            <input type="file" id="logoUpload" accept="image/*" hidden>
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <span class="upload-icon">📷</span>
+                                <p>Klik untuk upload logo</p>
+                                <span class="upload-hint">PNG, JPG, atau GIF (Max 5MB)</span>
+                            </div>
+                            <div class="image-preview" id="imagePreview" style="display: none;">
+                                <img id="previewImg" src="" alt="Preview">
+                                <button type="button" class="remove-image" id="removeImage">&times;</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Informasi Tambahan</h4>
+
+                        <div class="form-group">
+                            <label for="airdropWebsite">Website/Link</label>
+                            <input type="url" id="airdropWebsite" placeholder="https://example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="airdropCategory">Kategori</label>
+                            <select id="airdropCategory">
+                                <option value="DeFi">DeFi</option>
+                                <option value="NFT">NFT</option>
+                                <option value="GameFi">GameFi</option>
+                                <option value="Layer 2">Layer 2</option>
+                                <option value="Exchange">Exchange</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="airdropSteps">Langkah-langkah</label>
+                            <textarea id="airdropSteps" rows="5"
+                                placeholder="1. Kunjungi website&#10;2. Connect wallet&#10;3. Complete tasks&#10;..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelBtn">Batal</button>
+                        <button type="submit" class="btn-primary">Publikasikan Airdrop</button>
+                    </div>
+                </form>
             </div>
-            <form id="airdropForm" class="airdrop-form">
-                <div class="form-section">
-                    <h4>Informasi Dasar</h4>
-
-                    <div class="form-group">
-                        <label for="airdropTitle">Nama Airdrop *</label>
-                        <input type="text" id="airdropTitle" placeholder="Contoh: Arbitrum Airdrop" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="airdropDescription">Deskripsi *</label>
-                        <textarea id="airdropDescription" rows="4"
-                            placeholder="Jelaskan detail airdrop, syarat, dan cara mengikutinya..." required></textarea>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="airdropReward">Reward</label>
-                            <input type="text" id="airdropReward" placeholder="Contoh: $100 - $500">
-                        </div>
-                        <div class="form-group">
-                            <label for="airdropDeadline">Deadline</label>
-                            <input type="date" id="airdropDeadline">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="airdropNetwork">Network</label>
-                            <select id="airdropNetwork">
-                                <option value="Ethereum">Ethereum</option>
-                                <option value="BSC">BSC</option>
-                                <option value="Polygon">Polygon</option>
-                                <option value="Arbitrum">Arbitrum</option>
-                                <option value="Optimism">Optimism</option>
-                                <option value="Solana">Solana</option>
-                                <option value="Avalanche">Avalanche</option>
-                                <option value="Multichain">Multichain</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="airdropDifficulty">Difficulty</label>
-                            <select id="airdropDifficulty">
-                                <option value="Easy">Easy</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Hard">Hard</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h4>Logo Airdrop</h4>
-                    <div class="upload-area" id="uploadArea">
-                        <input type="file" id="logoUpload" accept="image/*" hidden>
-                        <div class="upload-placeholder" id="uploadPlaceholder">
-                            <span class="upload-icon">📷</span>
-                            <p>Klik untuk upload logo</p>
-                            <span class="upload-hint">PNG, JPG, atau GIF (Max 5MB)</span>
-                        </div>
-                        <div class="image-preview" id="imagePreview" style="display: none;">
-                            <img id="previewImg" src="" alt="Preview">
-                            <button type="button" class="remove-image" id="removeImage">&times;</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h4>Informasi Tambahan</h4>
-
-                    <div class="form-group">
-                        <label for="airdropWebsite">Website/Link</label>
-                        <input type="url" id="airdropWebsite" placeholder="https://example.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="airdropCategory">Kategori</label>
-                        <select id="airdropCategory">
-                            <option value="DeFi">DeFi</option>
-                            <option value="NFT">NFT</option>
-                            <option value="GameFi">GameFi</option>
-                            <option value="Layer 2">Layer 2</option>
-                            <option value="Exchange">Exchange</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="airdropSteps">Langkah-langkah</label>
-                        <textarea id="airdropSteps" rows="5"
-                            placeholder="1. Kunjungi website&#10;2. Connect wallet&#10;3. Complete tasks&#10;..."></textarea>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" id="cancelBtn">Batal</button>
-                    <button type="submit" class="btn-primary">Publikasikan Airdrop</button>
-                </div>
-            </form>
         </div>
-    </div>
     </div>
 
     <!-- Campaign Panel (Modal) -->
