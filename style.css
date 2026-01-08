@@ -645,12 +645,12 @@ body {
 /* Hero Campaign Carousel */
 .hero-campaign-carousel {
     width: 100%;
-    max-width: 550px;
-    min-height: 380px;
+    max-width: 620px;
+    min-height: 420px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 1.5rem;
+    padding: 1.5rem 2rem;
     box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
@@ -692,7 +692,7 @@ body {
 
 .hero-campaign-card {
     min-width: 100%;
-    padding: 1rem;
+    padding: 1.25rem;
     background: rgba(0, 0, 0, 0.3);
     border-radius: var(--radius-md);
     box-sizing: border-box;
@@ -700,22 +700,22 @@ body {
 
 .hero-campaign-card .campaign-banner {
     width: 100%;
-    height: 120px;
+    height: 160px;
     object-fit: cover;
     border-radius: var(--radius-sm);
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
 }
 
 .hero-campaign-card .campaign-banner-placeholder {
     width: 100%;
-    height: 120px;
+    height: 160px;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 0.75rem;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
 }
 
 .hero-campaign-card .campaign-info-row {
