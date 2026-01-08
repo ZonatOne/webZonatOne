@@ -1637,3 +1637,102 @@ function viewCampaignDetails(id) {
         if (e.target === modal) modal.remove();
     });
 }
+
+// ===== Crypto Price Ticker =====
+const CRYPTO_COINS = [
+    { id: 'bitcoin', symbol: 'BTC' },
+    { id: 'ethereum', symbol: 'ETH' },
+    { id: 'solana', symbol: 'SOL' },
+    { id: 'binancecoin', symbol: 'BNB' },
+    { id: 'cardano', symbol: 'ADA' },
+    { id: 'dogecoin', symbol: 'DOGE' },
+    { id: 'chainlink', symbol: 'LINK' },
+    { id: 'litecoin', symbol: 'LTC' },
+    { id: 'polkadot', symbol: 'DOT' },
+    { id: 'avalanche-2', symbol: 'AVAX' }
+];
+
+async function fetchCryptoPrices() {
+    try {
+        const ids = CRYPTO_COINS.map(c => c.id).join(',');
+        const response = await fetch(
+            `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
+        );
+
+        if (!response.ok) throw new Error('API Error');
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Failed to fetch crypto prices:', error);
+        return null;
+    }
+}
+
+function formatPrice(price) {
+    if (price >= 1000) {
+        return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else if (price >= 1) {
+        return price.toFixed(2);
+    } else {
+        return price.toFixed(4);
+    }
+}
+
+function renderCryptoTicker(prices) {
+    const tickerTrack = document.getElementById('tickerTrack');
+    if (!tickerTrack) return;
+
+    if (!prices) {
+        tickerTrack.innerHTML = `
+            <div class="ticker-content">
+                <span class="ticker-item">⚠️ Gagal memuat harga crypto</span>
+            </div>
+        `;
+        return;
+    }
+
+    let tickerHTML = '';
+
+    CRYPTO_COINS.forEach(coin => {
+        const coinData = prices[coin.id];
+        if (coinData) {
+            const price = coinData.usd;
+            const change = coinData.usd_24h_change || 0;
+            const changeClass = change >= 0 ? 'positive' : 'negative';
+            const changeSign = change >= 0 ? '+' : '';
+
+            tickerHTML += `
+                <span class="ticker-item">
+                    <span class="ticker-symbol">${coin.symbol}</span>
+                    <span class="ticker-price">$${formatPrice(price)}</span>
+                    <span class="ticker-change ${changeClass}">${changeSign}${change.toFixed(2)}%</span>
+                </span>
+            `;
+        }
+    });
+
+    // Duplicate content for seamless infinite scroll
+    tickerTrack.innerHTML = `
+        <div class="ticker-content">${tickerHTML}</div>
+        <div class="ticker-content">${tickerHTML}</div>
+    `;
+}
+
+async function initCryptoTicker() {
+    const prices = await fetchCryptoPrices();
+    renderCryptoTicker(prices);
+
+    // Auto-refresh every 60 seconds
+    setInterval(async () => {
+        const newPrices = await fetchCryptoPrices();
+        if (newPrices) {
+            renderCryptoTicker(newPrices);
+        }
+    }, 60000);
+}
+
+// Initialize ticker on page load
+document.addEventListener('DOMContentLoaded', () => {
+    initCryptoTicker();
+});

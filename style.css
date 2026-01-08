@@ -494,6 +494,80 @@ body {
     background: rgba(255, 82, 82, 0.4);
 }
 
+/* ===== Crypto Price Ticker ===== */
+.crypto-ticker {
+    background: rgba(10, 14, 39, 0.95);
+    border-bottom: 1px solid rgba(45, 96, 255, 0.3);
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+.ticker-track {
+    display: flex;
+    animation: ticker-scroll 40s linear infinite;
+}
+
+.ticker-track:hover {
+    animation-play-state: paused;
+}
+
+.ticker-content {
+    display: flex;
+    gap: 2rem;
+    padding: 0 1rem;
+}
+
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #b0c4de;
+    font-family: var(--font-family);
+}
+
+.ticker-item.loading {
+    color: #666;
+}
+
+.ticker-symbol {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.ticker-price {
+    color: #e0e0e0;
+}
+
+.ticker-change {
+    font-weight: 600;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.ticker-change.positive {
+    color: #00FF88;
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.ticker-change.negative {
+    color: #FF5252;
+    background: rgba(255, 82, 82, 0.1);
+}
+
+@keyframes ticker-scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
 /* ===== Hero Section ===== */
 .hero {
     padding: 4rem 0;
