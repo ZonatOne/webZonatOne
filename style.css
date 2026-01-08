@@ -603,35 +603,115 @@ body {
     gap: 2rem;
 }
 
-.stat-item {
-    text-align: center;
-    padding: 1.5rem;
+/* ===== Sci-Fi Component Utilities ===== */
+.sci-fi-box {
+    position: relative;
+    background: transparent;
+    padding: 2px;
+    /* For border width */
+    z-index: 1;
+}
+
+.sci-fi-box::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    /* Border thickness */
+    background: #2D60FF;
+    /* Solid Sci-Fi Blue */
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+
+    /* Chamfered Corners */
+    clip-path: polygon(15px 0, 100% 0,
+            100% calc(100% - 15px), calc(100% - 15px) 100%,
+            0 100%, 0 15px);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.sci-fi-box::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
     background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    min-width: 120px;
+    clip-path: polygon(13px 0, 100% 0,
+            100% calc(100% - 13px), calc(100% - 13px) 100%,
+            0 100%, 0 13px);
+    z-index: -2;
+    pointer-events: none;
+}
+
+/* Stats Cards with Sci-Fi Style */
+.stats-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 140px;
+    /* Reset standard styles */
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 1.5rem;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    /* Add reusable sci-fi logic manually here or use utility class in HTML */
+}
+
+/* Apply reusable sci-fi styles to stat-item explicitly for now */
+.stat-item::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    background: #2D60FF;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+    z-index: -1;
     transition: all 0.3s ease;
 }
 
-.stat-item:hover {
-    transform: translateY(-5px);
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-glow);
+.stat-item::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: rgba(10, 14, 39, 0.8);
+    /* Darker internal bg */
+    clip-path: polygon(13px 0, 100% 0, 100% calc(100% - 13px), calc(100% - 13px) 100%, 0 100%, 0 13px);
+    z-index: -2;
 }
 
-.stat-number {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--primary-color);
+.stat-item:hover::before {
+    background: var(--primary-color);
+    /* Bright Cyan on Hover */
+    box-shadow: 0 0 15px var(--primary-color);
+}
+
+.stat-value {
     display: block;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
 
 .stat-label {
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-weight: 600;
 }
 
 /* Hero Visual */
