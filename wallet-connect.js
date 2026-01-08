@@ -30,6 +30,7 @@ async function connectWallet() {
         isAdmin = walletAddress === ADMIN_WALLET;
 
         updateWalletUI();
+        refreshAdminUI(); // Re-render cards to show/hide admin buttons
 
         if (isAdmin) {
             showNotification('👑 Terhubung sebagai Admin! Akses penuh.');
@@ -58,6 +59,7 @@ async function disconnectWallet() {
         walletAddress = null;
         isAdmin = false;
         updateWalletUI();
+        refreshAdminUI(); // Re-render cards to hide admin buttons
         showNotification('👋 Wallet terputus');
     } catch (error) {
         console.error('Disconnect failed:', error);
@@ -76,15 +78,34 @@ function updateWalletUI() {
     const walletInfo = document.getElementById('walletInfo');
     const walletAddressSpan = document.getElementById('walletAddress');
     const adminBadge = document.getElementById('adminBadge');
+    const openAdminBtn = document.getElementById('openAdminBtn');
 
     if (walletConnected) {
         if (connectBtn) connectBtn.style.display = 'none';
         if (walletInfo) walletInfo.style.display = 'flex';
         if (walletAddressSpan) walletAddressSpan.textContent = shortenAddress(walletAddress);
         if (adminBadge) adminBadge.style.display = isAdmin ? 'inline-block' : 'none';
+        // Show Buat Airdrop only for admin
+        if (openAdminBtn) openAdminBtn.style.display = isAdmin ? 'flex' : 'none';
     } else {
         if (connectBtn) connectBtn.style.display = 'flex';
         if (walletInfo) walletInfo.style.display = 'none';
+        // Hide Buat Airdrop for non-connected users
+        if (openAdminBtn) openAdminBtn.style.display = 'none';
+    }
+}
+
+// ===== Refresh Admin UI (re-render cards) =====
+function refreshAdminUI() {
+    // Re-render cards to show/hide admin buttons
+    if (typeof renderAirdrops === 'function') {
+        renderAirdrops();
+    }
+    if (typeof renderCampaigns === 'function') {
+        renderCampaigns();
+    }
+    if (typeof renderCampaignCarousel === 'function') {
+        renderCampaignCarousel();
     }
 }
 

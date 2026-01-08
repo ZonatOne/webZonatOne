@@ -594,10 +594,12 @@ function createAirdropCard(airdrop) {
                 <button class="btn-action" onclick="viewDetails(${airdrop.id})">Detail</button>
                 <button class="btn-action primary" onclick="joinAirdrop(${airdrop.id})">Ikuti Airdrop</button>
             </div>
-            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+            ${(typeof isAdmin !== 'undefined' && isAdmin) ? `
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;" class="admin-actions">
                 <button class="btn-action" onclick="editAirdrop(${airdrop.id})" style="flex: 1; font-size: 0.85rem; padding: 0.5rem;">✏️ Edit</button>
                 <button class="btn-action" onclick="deleteAirdrop(${airdrop.id})" style="flex: 1; font-size: 0.85rem; padding: 0.5rem; border-color: #ff6b9d; color: #ff6b9d;">🗑️ Hapus</button>
             </div>
+            ` : ''}
         </div>
     `;
 }
@@ -1187,8 +1189,10 @@ function createCampaignCard(campaign) {
                 </div>
                 <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                     <button class="btn-action primary" onclick="visitCampaign(${campaign.id})" style="flex: 2;">Kunjungi</button>
+                    ${(typeof isAdmin !== 'undefined' && isAdmin) ? `
                     <button class="btn-action" onclick="editCampaign(${campaign.id})" style="flex: 1;">✏️</button>
                     <button class="btn-action" onclick="deleteCampaign(${campaign.id})" style="flex: 1; border-color: #ff6b9d; color: #ff6b9d;">🗑️</button>
+                    ` : ''}
                 </div>
             </div>
         </div>
