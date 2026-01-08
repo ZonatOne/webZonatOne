@@ -1482,11 +1482,9 @@ body {
     background: transparent;
     width: 100%;
     flex: 1;
-    /* Take remaining height */
     overflow-y: auto;
-    /* Enable scroll here */
-    padding-bottom: 3rem;
-    /* Space for buttons */
+    padding-bottom: 8rem;
+    /* Extra safe space */
 }
 
 /* Fee Notice */
@@ -1699,6 +1697,11 @@ body {
     gap: var(--spacing-md);
     padding-top: var(--spacing-lg);
     border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+    /* Prevent shrinking */
+    padding-bottom: 2rem;
+    /* Add spacing below buttons */
+    margin-bottom: 1rem;
 }
 
 .btn-primary,
