@@ -298,7 +298,19 @@ function animateCounter(element, target) {
 }
 
 // ===== Modal Functions =====
-function openAdminPanel() {
+async function openAdminPanel() {
+    // Check if admin wallet is connected
+    if (!walletConnected) {
+        showNotification('⚠️ Hubungkan wallet admin untuk membuat airdrop');
+        const connected = await connectWallet();
+        if (!connected) return;
+    }
+
+    if (!isAdmin) {
+        showNotification('🔒 Hanya admin yang dapat membuat airdrop');
+        return;
+    }
+
     adminPanel.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -922,7 +934,13 @@ function createSampleAirdrops() {
 }
 
 // ===== Edit and Delete Functions =====
-function editAirdrop(id) {
+async function editAirdrop(id) {
+    // Check if admin wallet is connected
+    if (!walletConnected || !isAdmin) {
+        showNotification('🔒 Hanya admin yang dapat mengedit airdrop');
+        return;
+    }
+
     const airdrop = airdrops.find(a => a.id === id);
     if (!airdrop) return;
 
@@ -948,10 +966,17 @@ function editAirdrop(id) {
     document.querySelector('#adminPanel .panel-header h3').textContent = 'Edit Info Airdrop';
     document.querySelector('#adminPanel .btn-primary').textContent = 'Update Airdrop';
 
-    openAdminPanel();
+    adminPanel.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function deleteAirdrop(id) {
+    // Check if admin wallet is connected
+    if (!walletConnected || !isAdmin) {
+        showNotification('🔒 Hanya admin yang dapat menghapus airdrop');
+        return;
+    }
+
     if (!confirm('Yakin ingin menghapus airdrop ini?')) return;
 
     airdrops = airdrops.filter(a => a.id !== id);
@@ -1180,6 +1205,12 @@ function visitCampaign(id) {
 }
 
 function editCampaign(id) {
+    // Check if admin wallet is connected
+    if (!walletConnected || !isAdmin) {
+        showNotification('🔒 Hanya admin yang dapat mengedit kampanye');
+        return;
+    }
+
     const campaign = campaigns.find(c => c.id === id);
     if (!campaign) return;
 
@@ -1209,10 +1240,20 @@ function editCampaign(id) {
     document.querySelector('#campaignPanel .panel-header h3').textContent = 'Edit Kampanye';
     document.querySelector('#campaignPanel .btn-primary').textContent = 'Update Kampanye';
 
-    openCampaignPanel();
+    // Open panel directly (already checked admin)
+    if (campaignPanel) {
+        campaignPanel.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function deleteCampaign(id) {
+    // Check if admin wallet is connected
+    if (!walletConnected || !isAdmin) {
+        showNotification('🔒 Hanya admin yang dapat menghapus kampanye');
+        return;
+    }
+
     if (!confirm('Yakin ingin menghapus kampanye ini?')) return;
 
     campaigns = campaigns.filter(c => c.id !== id);
