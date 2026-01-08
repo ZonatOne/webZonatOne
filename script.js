@@ -587,7 +587,6 @@ function createAirdropCard(airdrop) {
     return `
         <div class="airdrop-card" data-id="${airdrop.id}">
             <div class="airdrop-card-inner">
-                <span class="network-badge ${networkClass}">${airdrop.network || 'Multichain'}</span>
                 <div class="card-header">
                     ${logoHtml}
                     <div class="card-title-section">
@@ -606,6 +605,10 @@ function createAirdropCard(airdrop) {
                     <div class="info-item">
                         <span class="info-label">Deadline</span>
                         <span class="info-value">${deadlineFormatted}</span>
+                    </div>
+                    <div class="info-item network">
+                        <span class="info-label">Network</span>
+                        <span class="info-value network-value ${networkClass}">${airdrop.network || 'Multichain'}</span>
                     </div>
                 </div>
                 <div class="card-actions">

@@ -1477,7 +1477,8 @@ body {
 
 .card-info {
     display: flex;
-    gap: var(--spacing-md);
+    justify-content: space-between;
+    gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
     padding: var(--spacing-sm);
     background: rgba(0, 0, 0, 0.2);
@@ -1488,19 +1489,66 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    flex: 1;
 }
 
 .info-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .info-value {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--primary-color);
+}
+
+.network-value {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(45, 96, 255, 0.2);
+    border: 1px solid rgba(45, 96, 255, 0.4);
+    display: inline-block;
+}
+
+.network-value.solana {
+    background: rgba(153, 69, 255, 0.2);
+    border-color: rgba(153, 69, 255, 0.5);
+    color: #9945FF;
+}
+
+.network-value.ethereum {
+    background: rgba(98, 126, 234, 0.2);
+    border-color: rgba(98, 126, 234, 0.5);
+    color: #627EEA;
+}
+
+.network-value.polygon {
+    background: rgba(130, 71, 229, 0.2);
+    border-color: rgba(130, 71, 229, 0.5);
+    color: #8247E5;
+}
+
+.network-value.arbitrum {
+    background: rgba(40, 160, 240, 0.2);
+    border-color: rgba(40, 160, 240, 0.5);
+    color: #28A0F0;
+}
+
+.network-value.bsc {
+    background: rgba(243, 186, 47, 0.2);
+    border-color: rgba(243, 186, 47, 0.5);
+    color: #F3BA2F;
+}
+
+.network-value.multichain {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.5);
+    color: #00D4FF;
 }
 
 .card-actions {
