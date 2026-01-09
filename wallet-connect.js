@@ -110,6 +110,11 @@ function refreshAdminUI() {
     if (typeof renderHeroCarousel === 'function') {
         renderHeroCarousel();
     }
+
+    // Update banner admin UI
+    if (typeof updateBannerAdminUI === 'function') {
+        updateBannerAdminUI();
+    }
 }
 
 // ===== Check Campaign Access =====

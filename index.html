@@ -64,6 +64,25 @@
         <div class="orb orb-3"></div>
     </div>
 
+    <!-- Banner Ad Carousel -->
+    <div class="banner-ad-carousel" id="bannerCarousel">
+        <div class="banner-carousel-track" id="bannerTrack">
+            <!-- Banner slides will be dynamically inserted here -->
+            <div class="banner-slide">
+                <a href="#" target="_blank" class="banner-link">
+                    <div class="banner-placeholder">
+                        <span>📢 Advertisement Space Available</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <button class="banner-nav banner-prev" id="bannerPrev">◀</button>
+        <button class="banner-nav banner-next" id="bannerNext">▶</button>
+        <div class="banner-indicators" id="bannerIndicators">
+            <span class="banner-dot active" data-index="0"></span>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container">
@@ -99,6 +118,10 @@
                 <button class="nav-item" data-page="campaign">
                     <span class="icon">⭐</span>
                     <span>Star Kampanye</span>
+                </button>
+                <button class="nav-item" id="manageBannersBtn" data-page="banners" style="display: none;">
+                    <span class="icon">📢</span>
+                    <span>Kelola Banner</span>
                 </button>
             </div>
             <!-- Wallet Connect -->
@@ -479,6 +502,68 @@
         </div>
     </div>
 
+    <!-- Banner Management Panel (Modal) -->
+    <div class="modal-overlay" id="bannerManagementPanel">
+        <div class="admin-panel">
+            <div class="admin-panel-inner">
+                <div class="panel-header">
+                    <h3>Kelola Banner Iklan</h3>
+                    <button class="close-btn" id="closeBannerManagementBtn">&times;</button>
+                </div>
+
+                <!-- Add New Banner Form -->
+                <form id="bannerForm" class="airdrop-form">
+                    <div class="form-section">
+                        <h4>Tambah Banner Baru</h4>
+
+                        <div class="form-group">
+                            <label for="bannerTitle">Judul Banner *</label>
+                            <input type="text" id="bannerTitle" placeholder="Nama untuk identifikasi banner" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bannerLink">Link URL *</label>
+                            <input type="url" id="bannerLink" placeholder="https://advertiser-website.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Upload Banner Image</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">📐 Ukuran
+                            rekomendasi: <strong>1200x200px</strong> (landscape)</p>
+                        <div class="upload-area upload-banner" id="uploadBannerAdArea">
+                            <input type="file" id="bannerAdImageUpload" accept="image/*" hidden>
+                            <div class="upload-placeholder" id="uploadBannerAdPlaceholder">
+                                <span class="upload-icon">🎨</span>
+                                <p>Klik untuk upload banner</p>
+                                <span class="upload-hint">PNG, JPG, GIF (Max 5MB)</span>
+                            </div>
+                            <div class="image-preview banner-preview" id="bannerAdPreview" style="display: none;">
+                                <img id="bannerAdPreviewImg" src="" alt="Banner Preview">
+                                <button type="button" class="remove-image" id="removeBannerAdBtn">&times;</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelBannerBtn">Batal</button>
+                        <button type="submit" class="btn-primary">Tambah Banner</button>
+                    </div>
+                </form>
+
+                <!-- Existing Banners List -->
+                <div class="form-section">
+                    <h4>Banner Aktif</h4>
+                    <div id="existingBannersList" class="existing-banners-list">
+                        <!-- Existing banners will be loaded here -->
+                        <p style="color: var(--text-secondary); text-align: center; padding: 1rem;">Tidak ada banner
+                            aktif</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <footer class="footer">
         <div class="container">
@@ -568,6 +653,7 @@
     <script src="wallet-connect.js"></script>
 
     <script src="script.js"></script>
+    <script src="banner-carousel.js"></script>
 </body>
 
 </html>

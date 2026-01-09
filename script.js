@@ -1,16 +1,21 @@
 // ===== State Management =====
 let airdrops = [];
 let campaigns = [];
+let banners = []; // Banner ads state
 let currentImageData = null;
 let currentLogoData = null;
 let currentBannerData = null;
+let currentBannerImageData = null; // For banner ad image upload
 let currentPage = 'home';
 let currentFilter = 'all';
 let searchQuery = '';
 let editingId = null;
 let editingCampaignId = null;
+let editingBannerId = null; // For editing banner
 let currentSlide = 0;
+let currentBannerSlide = 0; // Current banner carousel slide
 let autoSlideInterval = null;
+let bannerAutoSlideInterval = null; // Banner carousel auto-slide timer
 
 // ===== DOM Elements =====
 const adminPanel = document.getElementById('adminPanel');
